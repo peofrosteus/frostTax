@@ -69,6 +69,7 @@
       td.amount,
       th.amount {
         text-align: right;
+        white-space: nowrap;
       }
 
       tr.sum-row td {
@@ -141,25 +142,25 @@
       <tr>
         <td>Nettoomsättning (kr)</td>
         {% for y in mgmt_report.multi_year_overview %}
-        <td class="amount">{{ "{:,.0f}".format(y.net_revenue).replace(",", " ") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(y.net_revenue).replace(",", "\u00a0") }}</td>
         {% endfor %}
       </tr>
       <tr>
         <td>Rörelseresultat (kr)</td>
         {% for y in mgmt_report.multi_year_overview %}
-        <td class="amount">{{ "{:,.0f}".format(y.operating_result).replace(",", " ") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(y.operating_result).replace(",", "\u00a0") }}</td>
         {% endfor %}
       </tr>
       <tr>
         <td>Årets resultat (kr)</td>
         {% for y in mgmt_report.multi_year_overview %}
-        <td class="amount">{{ "{:,.0f}".format(y.annual_result).replace(",", " ") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(y.annual_result).replace(",", "\u00a0") }}</td>
         {% endfor %}
       </tr>
       <tr>
         <td>Balansomslutning (kr)</td>
         {% for y in mgmt_report.multi_year_overview %}
-        <td class="amount">{{ "{:,.0f}".format(y.total_assets).replace(",", " ") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(y.total_assets).replace(",", "\u00a0") }}</td>
         {% endfor %}
       </tr>
     </table>
@@ -176,7 +177,7 @@
       {% for line in income_stmt.lines %}
       <tr{% if line.is_sum %} class="sum-row"{% endif %}>
         <td{% if line.indent == 1 %} class="indent-1"{% elif line.indent == 2 %} class="indent-2"{% endif %}>{{ line.label }}</td>
-        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}</td>
+        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", "\u00a0") }}{% endif %}</td>
       </tr>
       {% endfor %}
     </table>
@@ -191,7 +192,7 @@
       {% for line in balance.assets %}
       <tr{% if line.is_sum %} class="sum-row"{% endif %}>
         <td{% if line.indent == 1 %} class="indent-1"{% elif line.indent == 2 %} class="indent-2"{% endif %}>{{ line.label }}</td>
-        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}</td>
+        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", "\u00a0") }}{% endif %}</td>
       </tr>
       {% endfor %}
     </table>
@@ -205,7 +206,7 @@
       {% for line in balance.equity_and_liabilities %}
       <tr{% if line.is_sum %} class="sum-row"{% endif %}>
         <td{% if line.indent == 1 %} class="indent-1"{% elif line.indent == 2 %} class="indent-2"{% endif %}>{{ line.label }}</td>
-        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}</td>
+        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", "\u00a0") }}{% endif %}</td>
       </tr>
       {% endfor %}
     </table>
