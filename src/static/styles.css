@@ -320,6 +320,31 @@ footer {
   text-align: center;
 }
 
+/* ===== Tax calc ===== */
+.editable-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.detail-list {
+  list-style: none;
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 4px;
+}
+.detail-list li {
+  margin-bottom: 2px;
+}
+details summary {
+  cursor: pointer;
+  color: #2563eb;
+  font-size: 0.85rem;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
   .report-actions {

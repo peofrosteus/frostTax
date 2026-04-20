@@ -12,6 +12,19 @@ from io import StringIO
 
 from src.sie_parser.models import SieFile
 from src.tax.sru_mapping import aggregate_sru
+from src.tax.ink2_tax_calc import calculate_ink2_tax
+
+# SRU field codes for INK2 page 1 (skatteberäkning)
+INK2_PAGE1_SRU = {
+    "1.1": "7014",
+    "1.2": "7015",
+    "1.3": "7016",
+    "1.5": "7007",
+    "1.7": "7006",
+    "1.11": "7017",
+    "1.13": "7050",
+    "1.14": "7051",
+}
 
 
 def generate_sru_file(sie: SieFile) -> str:
@@ -53,13 +66,18 @@ def generate_sru_file(sie: SieFile) -> str:
         buf.write(f"#UPPGIFT 7012 {fiscal_start}\n")
         buf.write(f"#UPPGIFT 7013 {fiscal_end}\n")
 
-    # Write each SRU field
+    # Write each SRU field (INK2R - räkenskapsschema)
     for f in fields:
-        # SRU values: positive amounts are written as-is,
-        # negative amounts are written with minus sign.
-        # Skatteverket expects whole numbers (öre removed).
         amount_int = int(f.amount)
         buf.write(f"#UPPGIFT {f.sru_code} {amount_int}\n")
+
+    # Write INK2 page 1 fields (skatteberäkning)
+    tax_calc = calculate_ink2_tax(sie)
+    for tf in tax_calc.fields:
+        if tf.field_id in INK2_PAGE1_SRU and tf.amount != 0:
+            sru_code = INK2_PAGE1_SRU[tf.field_id]
+            amount_int = int(tf.amount)
+            buf.write(f"#UPPGIFT {sru_code} {amount_int}\n")
 
     buf.write("#BLANKETTSLUT\n")
     buf.write("#FIL_SLUT\n")

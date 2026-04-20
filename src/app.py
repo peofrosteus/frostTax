@@ -24,6 +24,7 @@ from src.financial.management_report import generate_management_report
 from src.financial.notes import generate_notes
 from src.tax.sru_mapping import aggregate_sru
 from src.tax.sru_generator import generate_sru_file
+from src.tax.ink2_tax_calc import calculate_ink2_tax
 
 app = Flask(
     __name__,
@@ -167,10 +168,12 @@ def tax_summary(file_id: str):
         return redirect(url_for("index"))
 
     sru_fields = aggregate_sru(sie)
+    tax_calc = calculate_ink2_tax(sie)
     return render_template(
         "tax_summary.html",
         sie=sie,
         sru_fields=sru_fields,
+        tax_calc=tax_calc,
         file_id=file_id,
     )
 

@@ -18,9 +18,47 @@
     {% endif %}
 
     <p class="info-text">
-        Nedan visas de SRU-koder och belopp som mappats från SIE-filen till INK2-blankettens fält.
+        Nedan visas skatteberäkningen (INK2 sid 1) samt räkenskapsschemat (INK2R).
         Ladda ner SRU-filen ovan för digital inlämning till Skatteverket via filöverföring.
     </p>
+
+    <!-- INK2 Sid 1: Skatteberäkning -->
+    <h3>INK2 – Skatteberäkning (fält 1.1–1.16)</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Fält</th>
+                <th>Beskrivning</th>
+                <th class="amount">Belopp (kr)</th>
+                <th>Info</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tf in tax_calc.fields %}
+            <tr class="{% if tf.field_id in ['1.4', '1.11', '1.13', '1.14', '1.16'] %}sum-row{% endif %}">
+                <td><strong>{{ tf.field_id }}</strong></td>
+                <td>{{ tf.label }}</td>
+                <td class="amount">{{ "{:,.0f}".format(tf.amount).replace(",", " ") }}</td>
+                <td>
+                    {% if tf.editable %}<span class="editable-badge">Redigerbar</span>{% endif %}
+                    {% if tf.details %}
+                    <details>
+                        <summary>Detaljer</summary>
+                        <ul class="detail-list">
+                            {% for acct, name, amt in tf.details %}
+                            <li>{{ acct }} {{ name }}: {{ "{:,.0f}".format(amt).replace(",", " ") }} kr</li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- INK2R: Räkenskapsschema -->
+    <h3>INK2R – Räkenskapsschema (SRU-koder)</h3>
 
     {% set sections = {} %}
     {% for f in sru_fields %}
