@@ -139,22 +139,24 @@ def report_pdf(file_id: str):
         framework=framework,
     )
 
-    try:
-        from weasyprint import HTML
-        pdf = HTML(string=html, base_url=str(Path(__file__).parent)).write_pdf()
-        from io import BytesIO
-        pdf_io = BytesIO(pdf)
-        pdf_io.seek(0)
-        company_name = sie.company.name.replace(" ", "_")
-        return send_file(
-            pdf_io,
-            mimetype="application/pdf",
-            as_attachment=True,
-            download_name=f"arsredovisning_{company_name}.pdf",
-        )
-    except ImportError:
-        flash("WeasyPrint är inte installerat. Installera med: pip install weasyprint", "error")
+    from io import BytesIO
+    from xhtml2pdf import pisa
+
+    pdf_io = BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=pdf_io)
+
+    if pisa_status.err:
+        flash("Kunde inte generera PDF.", "error")
         return redirect(url_for("report", file_id=file_id))
+
+    pdf_io.seek(0)
+    company_name = sie.company.name.replace(" ", "_")
+    return send_file(
+        pdf_io,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"arsredovisning_{company_name}.pdf",
+    )
 
 
 @app.route("/tax/<file_id>")
