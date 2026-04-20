@@ -25,6 +25,7 @@ from src.financial.notes import generate_notes
 from src.tax.sru_mapping import aggregate_sru
 from src.tax.sru_generator import generate_sru_file
 from src.tax.ink2_tax_calc import calculate_ink2_tax
+from src.tax.ink2s_calc import calculate_ink2s
 
 app = Flask(
     __name__,
@@ -169,11 +170,13 @@ def tax_summary(file_id: str):
 
     sru_fields = aggregate_sru(sie)
     tax_calc = calculate_ink2_tax(sie)
+    ink2s = calculate_ink2s(sie)
     return render_template(
         "tax_summary.html",
         sie=sie,
         sru_fields=sru_fields,
         tax_calc=tax_calc,
+        ink2s=ink2s,
         file_id=file_id,
     )
 

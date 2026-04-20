@@ -18,11 +18,12 @@
     {% endif %}
 
     <p class="info-text">
-        Nedan visas skatteberäkningen (INK2 sid 1) samt räkenskapsschemat (INK2R).
-        Ladda ner SRU-filen ovan för digital inlämning till Skatteverket via filöverföring.
+        Nedan visas hela deklarationsunderlaget: skatteberäkning (INK2 sid 1),
+        räkenskapsschema (INK2R) och skattemässiga justeringar (INK2S).
+        Ladda ner SRU-filen ovan för digital inlämning till Skatteverket.
     </p>
 
-    <!-- INK2 Sid 1: Skatteberäkning -->
+    {# ══════ INK2 Sid 1: Skatteberäkning ══════ #}
     <h3>INK2 – Skatteberäkning (fält 1.1–1.16)</h3>
     <table class="data-table">
         <thead>
@@ -57,16 +58,8 @@
         </tbody>
     </table>
 
-    <!-- INK2R: Räkenskapsschema -->
-    <h3>INK2R – Räkenskapsschema (SRU-koder)</h3>
-
-    {% set sections = {} %}
-    {% for f in sru_fields %}
-        {% if f.section not in sections %}
-            {% set _ = sections.update({f.section: []}) %}
-        {% endif %}
-        {% set _ = sections[f.section].append(f) %}
-    {% endfor %}
+    {# ══════ INK2R: Räkenskapsschema ══════ #}
+    <h3>INK2R – Räkenskapsschema (fält 2.1–2.50, 3.1–3.27)</h3>
 
     {% set current_section = {'name': ''} %}
     {% for f in sru_fields %}
@@ -75,12 +68,12 @@
                 </tbody></table>
             {% endif %}
             {% set _ = current_section.update({'name': f.section}) %}
-            <h3>{{ f.section }}</h3>
+            <h4>{{ f.section }}</h4>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>SRU-kod</th>
-                        <th>INK2-fält</th>
+                        <th>Fält</th>
+                        <th>SRU</th>
                         <th>Beskrivning</th>
                         <th class="amount">Belopp (kr)</th>
                     </tr>
@@ -88,8 +81,8 @@
                 <tbody>
         {% endif %}
         <tr>
+            <td><strong>{{ f.ink2_field }}</strong></td>
             <td><code>{{ f.sru_code }}</code></td>
-            <td>{{ f.ink2_field }}</td>
             <td>{{ f.label }}</td>
             <td class="amount">{{ "{:,.0f}".format(f.amount).replace(",", " ") }}</td>
         </tr>
@@ -97,5 +90,42 @@
     {% if sru_fields %}
         </tbody></table>
     {% endif %}
+
+    {# ══════ INK2S: Skattemässiga justeringar ══════ #}
+    <h3>INK2S – Skattemässiga justeringar (fält 4.1–4.22)</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Fält</th>
+                <th>Beskrivning</th>
+                <th class="amount">+/−</th>
+                <th class="amount">Belopp (kr)</th>
+                <th>Info</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sf in ink2s.fields %}
+            <tr class="{% if sf.field_id in ['4.15', '4.16'] %}sum-row{% endif %}{% if sf.field_id.startswith('4.17') or sf.field_id.startswith('4.18') or sf.field_id.startswith('4.19') or sf.field_id.startswith('4.20') or sf.field_id.startswith('4.21') or sf.field_id.startswith('4.22') %} info-row{% endif %}">
+                <td><strong>{{ sf.field_id }}</strong></td>
+                <td>{{ sf.label }}</td>
+                <td class="amount">{{ sf.sign }}</td>
+                <td class="amount">{{ "{:,.0f}".format(sf.amount).replace(",", " ") }}</td>
+                <td>
+                    {% if sf.editable %}<span class="editable-badge">Redigerbar</span>{% endif %}
+                    {% if sf.details %}
+                    <details>
+                        <summary>Detaljer</summary>
+                        <ul class="detail-list">
+                            {% for acct, name, amt in sf.details %}
+                            <li>{{ acct }} {{ name }}: {{ "{:,.0f}".format(amt).replace(",", " ") }} kr</li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

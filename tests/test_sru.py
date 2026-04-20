@@ -37,6 +37,25 @@ def test_sru_revenue_mapping():
     assert revenue[0].amount == Decimal("-6720") + Decimal("-7840") + Decimal("0.15")
 
 
+def test_sru_field_numbers_correct():
+    """Verify SRU fields have correct INK2R field numbers."""
+    sie = parse_sie_file(SIE_FILE)
+    fields = aggregate_sru(sie)
+
+    # SRU 7281 should map to field 2.26 (Kassa och bank), not 2.16
+    kassa = [f for f in fields if f.sru_code == "7281"]
+    assert kassa[0].ink2_field == "2.26"
+
+    # SRU 7410 should map to field 3.1 (Nettoomsättning), not 2.33
+    revenue = [f for f in fields if f.sru_code == "7410"]
+    assert revenue[0].ink2_field == "3.1"
+
+    # SRU 7513 should map to field 3.7 (Övriga externa kostnader)
+    ext_costs = [f for f in fields if f.sru_code == "7513"]
+    if ext_costs:
+        assert ext_costs[0].ink2_field == "3.7"
+
+
 def test_sru_file_generation():
     sie = parse_sie_file(SIE_FILE)
     sru_content = generate_sru_file(sie)
@@ -44,9 +63,15 @@ def test_sru_file_generation():
     # Check SRU file structure
     assert "#DATABESKRIVNING_START" in sru_content
     assert "#DATABESKRIVNING_SLUT" in sru_content
-    assert "#BLANKETT INK2-2026" in sru_content
-    assert "#BLANKETTSLUT" in sru_content
     assert "#FIL_SLUT" in sru_content
+
+    # All three blanketter should be present
+    assert "#BLANKETT INK2-2026" in sru_content
+    assert "#BLANKETT INK2R-2026" in sru_content
+    assert "#BLANKETT INK2S-2026" in sru_content
+
+    # Three BLANKETTSLUT (one per blankett)
+    assert sru_content.count("#BLANKETTSLUT") == 3
 
     # Check org number
     assert "5595325340" in sru_content
