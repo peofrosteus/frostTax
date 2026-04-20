@@ -30,11 +30,11 @@ def test_sru_revenue_mapping():
     sie = parse_sie_file(SIE_FILE)
     fields = aggregate_sru(sie)
 
-    # SRU 7410 (nettoomsättning): 3001:-6720 + 3010:-7840 + 3740:0.15 = -14559.85
+    # SRU 7410 (nettoomsättning): abs(3001:-6720 + 3010:-7840 + 3740:0.15) = 14559.85
     revenue = [f for f in fields if f.sru_code == "7410"]
     assert len(revenue) == 1
-    # Revenue accounts are negative (credit), SRU should show the raw value
-    assert revenue[0].amount == Decimal("-6720") + Decimal("-7840") + Decimal("0.15")
+    # Income statement SRU values use absolute values
+    assert revenue[0].amount == abs(Decimal("-6720") + Decimal("-7840") + Decimal("0.15"))
 
 
 def test_sru_field_numbers_correct():
@@ -66,18 +66,19 @@ def test_sru_file_generation():
     assert "#FIL_SLUT" in sru_content
 
     # All three blanketter should be present
-    assert "#BLANKETT INK2-2026" in sru_content
-    assert "#BLANKETT INK2R-2026" in sru_content
-    assert "#BLANKETT INK2S-2026" in sru_content
+    assert "#BLANKETT INK2-2025P4" in sru_content
+    assert "#BLANKETT INK2R-2025P4" in sru_content
+    assert "#BLANKETT INK2S-2025P4" in sru_content
 
     # Three BLANKETTSLUT (one per blankett)
     assert sru_content.count("#BLANKETTSLUT") == 3
 
-    # Check org number
-    assert "5595325340" in sru_content
+    # Check org number with 16-prefix
+    assert "165595325340" in sru_content
 
-    # Check company name
-    assert "Frosteus Consulting AB" in sru_content
+    # Check MEDIELEV block
+    assert "#MEDIELEV_START" in sru_content
+    assert "#MEDIELEV_SLUT" in sru_content
 
 
 def test_sru_file_contains_fields():
@@ -87,6 +88,6 @@ def test_sru_file_contains_fields():
     # Should contain SRU code 7281 (kassa)
     assert "#UPPGIFT 7281 40610" in sru_content
 
-    # Should contain fiscal year dates
-    assert "#UPPGIFT 7012 20250101" in sru_content
-    assert "#UPPGIFT 7013 20251231" in sru_content
+    # Should contain fiscal year dates (7011=start, 7012=end)
+    assert "#UPPGIFT 7011 20250101" in sru_content
+    assert "#UPPGIFT 7012 20251231" in sru_content

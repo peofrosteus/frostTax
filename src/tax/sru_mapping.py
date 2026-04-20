@@ -176,6 +176,10 @@ def aggregate_sru(sie: SieFile) -> list[SruField]:
     for sru_code, amount in sorted(sru_totals.items()):
         if sru_code in SRU_TO_INK2:
             ink2_field, label, section = SRU_TO_INK2[sru_code]
+            # Income statement fields (3.x): use absolute values
+            # Balance sheet fields (2.x): keep raw SIE sign
+            if ink2_field.startswith("3."):
+                amount = abs(amount)
             fields.append(SruField(
                 sru_code=sru_code,
                 ink2_field=ink2_field,

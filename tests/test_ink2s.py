@@ -92,6 +92,6 @@ def test_ink2s_in_sru_file():
     sie = parse_sie_file(SIE_FILE)
     from src.tax.sru_generator import generate_sru_file
     sru_content = generate_sru_file(sie)
-    assert "#BLANKETT INK2S-2026" in sru_content
+    assert "#BLANKETT INK2S-2025P4" in sru_content
     # 4.1 (årets resultat, vinst) should be in the file
     assert "#UPPGIFT 7650" in sru_content

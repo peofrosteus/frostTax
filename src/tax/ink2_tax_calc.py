@@ -70,6 +70,7 @@ INK2_PAGE1_SRU: dict[str, str] = {
     "1.14": "97",     # Fastighetsskatt vattenkraftverk
     "1.15": "98",     # Fastighetsskatt vindkraftverk
     "1.16": "1582",   # Förnybar el (kilowattimmar)
+    "1.17": "1586",   # Inventarieköp under 2021
 }
 
 
@@ -147,6 +148,10 @@ def calculate_ink2_tax(sie: SieFile) -> Ink2TaxCalculation:
 
     # ── Underlag för skattereduktion ──
     _add(TaxField("1.16", "Förnybar el (kilowattimmar)",
+                   Decimal(0), editable=True))
+
+    # ── Övriga upplysningar ──
+    _add(TaxField("1.17", "Inventarieköp under 2021",
                    Decimal(0), editable=True))
 
     return calc
