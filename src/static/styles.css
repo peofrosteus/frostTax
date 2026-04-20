@@ -1,0 +1,335 @@
+/* ===== Reset & Base ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  color: #1a1a2e;
+  background: #f8f9fa;
+}
+
+/* ===== Layout ===== */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+  background: #1a1a2e;
+  color: #fff;
+  padding: 16px 0;
+  margin-bottom: 32px;
+}
+.navbar .container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+.tagline {
+  color: #8888aa;
+  font-size: 0.9rem;
+}
+
+/* ===== Flash messages ===== */
+.flash-messages {
+  margin-bottom: 24px;
+}
+.flash {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+.flash-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+.flash-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+/* ===== Upload ===== */
+.upload-section {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.upload-section h1 {
+  margin-bottom: 8px;
+}
+.upload-section p {
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.upload-form {
+  margin-bottom: 32px;
+}
+.file-input-wrapper {
+  margin-bottom: 16px;
+}
+.file-input-wrapper input[type="file"] {
+  display: block;
+  width: 100%;
+  padding: 12px;
+}
+.file-label {
+  display: none;
+}
+
+.local-files h2 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+.local-files ul {
+  list-style: none;
+}
+.local-files li {
+  margin-bottom: 6px;
+}
+.local-files a {
+  color: #2563eb;
+  text-decoration: none;
+}
+.local-files a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+}
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+.btn-secondary {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+.btn-outline {
+  background: transparent;
+  color: #2563eb;
+  border-color: #2563eb;
+}
+.btn-outline:hover {
+  background: #eff6ff;
+}
+
+/* ===== Report ===== */
+.report-header {
+  margin-bottom: 32px;
+}
+.report-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.annual-report,
+.tax-report {
+  background: #fff;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.report-cover {
+  text-align: center;
+  padding: 48px 0;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 32px;
+}
+.report-cover h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+.report-cover h2 {
+  font-size: 1.4rem;
+  color: #374151;
+  margin-bottom: 8px;
+}
+.report-cover .org-number {
+  color: #6b7280;
+}
+.report-cover .fiscal-year {
+  color: #6b7280;
+  margin-top: 4px;
+}
+.framework-badge {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 4px 16px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.report-section {
+  margin-bottom: 32px;
+}
+.report-section h2 {
+  font-size: 1.3rem;
+  border-bottom: 2px solid #1a1a2e;
+  padding-bottom: 6px;
+  margin-bottom: 16px;
+}
+.report-section h3 {
+  font-size: 1.05rem;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+/* ===== Tables ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.data-table th,
+.data-table td {
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #e5e7eb;
+}
+.data-table th {
+  font-weight: 600;
+  background: #f8f9fa;
+  border-bottom: 2px solid #d1d5db;
+}
+.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sum-row td {
+  font-weight: 700;
+  border-top: 1px solid #9ca3af;
+}
+.indent-1 td:first-child {
+  padding-left: 24px;
+}
+.indent-2 td:first-child {
+  padding-left: 48px;
+}
+
+.financial-table tr:last-child td {
+  border-top: 3px double #1a1a2e;
+  font-weight: 700;
+}
+
+/* ===== Signatures ===== */
+.signature-line {
+  margin-top: 32px;
+}
+.signature-box {
+  width: 250px;
+}
+.signature-box .line {
+  border-bottom: 1px solid #333;
+  height: 48px;
+}
+.signature-box .role {
+  font-style: italic;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* ===== Notes ===== */
+.note {
+  margin-bottom: 16px;
+}
+.note h3 {
+  font-size: 1rem;
+}
+
+/* ===== Tax ===== */
+.tax-report h1 {
+  margin-bottom: 4px;
+}
+.tax-report h2 {
+  font-size: 1.2rem;
+  color: #374151;
+  margin-bottom: 4px;
+  border: none;
+}
+.tax-report h3 {
+  margin-top: 24px;
+  font-size: 1.1rem;
+  color: #1a1a2e;
+}
+.info-text {
+  color: #6b7280;
+  margin: 16px 0;
+}
+.org-number {
+  color: #6b7280;
+}
+
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* ===== Footer ===== */
+footer {
+  margin-top: 48px;
+  padding: 24px 0;
+  border-top: 1px solid #e5e7eb;
+}
+.footer-text {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .report-actions {
+    flex-direction: column;
+  }
+  .btn {
+    text-align: center;
+  }
+  .annual-report,
+  .tax-report {
+    padding: 16px;
+  }
+}

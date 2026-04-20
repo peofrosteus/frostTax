@@ -1,0 +1,41 @@
+{% extends "base.html" %} {% block title %}Ladda upp SIE-fil – frostTax{%
+endblock %} {% block content %}
+<div class="upload-section">
+  <h1>Ladda upp SIE-fil</h1>
+  <p>
+    Välj en SIE4-fil exporterad från ditt bokföringsprogram (t.ex. Fortnox,
+    Visma, Björn Lundén).
+  </p>
+
+  <form
+    method="post"
+    action="{{ url_for('upload') }}"
+    enctype="multipart/form-data"
+    class="upload-form"
+  >
+    <div class="file-input-wrapper">
+      <input type="file" name="file" id="file" accept=".se,.si,.sie" required />
+      <label for="file" class="file-label">
+        <span class="file-icon">📁</span>
+        <span>Välj SIE-fil (.se / .si / .sie)</span>
+      </label>
+    </div>
+    <button type="submit" class="btn btn-primary">
+      Generera årsredovisning
+    </button>
+  </form>
+
+  {% set sie_files = [] %}
+  <div class="local-files">
+    <h2>Lokala SIE-filer</h2>
+    <p>Eller välj en fil från <code>sieFiles/</code>-mappen:</p>
+    <ul>
+      {% for f in local_files %}
+      <li><a href="{{ url_for('load_local', filename=f) }}">{{ f }}</a></li>
+      {% else %}
+      <li><em>Inga SIE-filer hittades i sieFiles/</em></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <title>Årsredovisning – {{ sie.company.name }}</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 25mm 20mm 25mm 20mm;
+      }
+      body {
+        font-family: "Georgia", "Times New Roman", serif;
+        font-size: 11pt;
+        line-height: 1.5;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 22pt;
+        margin-top: 60mm;
+        text-align: center;
+      }
+      h2 {
+        font-size: 16pt;
+        margin-top: 10mm;
+        border-bottom: 1px solid #333;
+        padding-bottom: 2mm;
+      }
+      h3 {
+        font-size: 12pt;
+        margin-top: 6mm;
+      }
+
+      .cover {
+        page-break-after: always;
+        text-align: center;
+      }
+      .cover h1 {
+        margin-top: 80mm;
+        font-size: 26pt;
+      }
+      .cover h2 {
+        border: none;
+        font-size: 18pt;
+        text-align: center;
+      }
+      .cover p {
+        font-size: 13pt;
+      }
+      .org-number {
+        color: #555;
+      }
+
+      .report-section {
+        page-break-before: auto;
+      }
+      .report-section + .report-section {
+        margin-top: 10mm;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 4mm 0;
+      }
+      th,
+      td {
+        padding: 2mm 3mm;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        font-weight: bold;
+        border-bottom: 2px solid #333;
+      }
+      .amount {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .sum-row td {
+        font-weight: bold;
+        border-top: 1px solid #999;
+      }
+      .indent-1 td:first-child {
+        padding-left: 8mm;
+      }
+      .indent-2 td:first-child {
+        padding-left: 16mm;
+      }
+
+      .financial-table tr:last-child td {
+        border-top: 2px solid #333;
+        font-weight: bold;
+      }
+
+      .signature-line {
+        margin-top: 20mm;
+      }
+      .signature-box {
+        width: 60mm;
+      }
+      .signature-box .line {
+        border-bottom: 1px solid #333;
+        height: 15mm;
+      }
+      .signature-box .role {
+        font-style: italic;
+        font-size: 10pt;
+        color: #555;
+      }
+
+      .note {
+        margin-bottom: 5mm;
+      }
+      .note h3 {
+        font-size: 11pt;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <h1>Årsredovisning</h1>
+      <h2>{{ sie.company.name }}</h2>
+      <p class="org-number">Org.nr {{ sie.company.org_number }}</p>
+      {% if sie.company.fiscal_year_start and sie.company.fiscal_year_end %}
+      <p>
+        Räkenskapsåret {{ sie.company.fiscal_year_start.isoformat() }} – {{
+        sie.company.fiscal_year_end.isoformat() }}
+      </p>
+      {% endif %}
+    </div>
+
+    <section class="report-section">
+      <h2>Förvaltningsberättelse</h2>
+      <h3>Verksamheten</h3>
+      <p>{{ mgmt_report.business_description }}</p>
+
+      {% if mgmt_report.significant_events %}
+      <h3>Väsentliga händelser under räkenskapsåret</h3>
+      <p>{{ mgmt_report.significant_events }}</p>
+      {% endif %}
+
+      <h3>Flerårsöversikt</h3>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            {% for year in mgmt_report.multi_year_overview %}
+            <th class="amount">{{ year.year }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nettoomsättning (kr)</td>
+            {% for y in mgmt_report.multi_year_overview %}
+            <td class="amount">
+              {{ "{:,.0f}".format(y.net_revenue).replace(",", " ") }}
+            </td>
+            {% endfor %}
+          </tr>
+          <tr>
+            <td>Rörelseresultat (kr)</td>
+            {% for y in mgmt_report.multi_year_overview %}
+            <td class="amount">
+              {{ "{:,.0f}".format(y.operating_result).replace(",", " ") }}
+            </td>
+            {% endfor %}
+          </tr>
+          <tr>
+            <td>Årets resultat (kr)</td>
+            {% for y in mgmt_report.multi_year_overview %}
+            <td class="amount">
+              {{ "{:,.0f}".format(y.annual_result).replace(",", " ") }}
+            </td>
+            {% endfor %}
+          </tr>
+          <tr>
+            <td>Balansomslutning (kr)</td>
+            {% for y in mgmt_report.multi_year_overview %}
+            <td class="amount">
+              {{ "{:,.0f}".format(y.total_assets).replace(",", " ") }}
+            </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Resultatdisposition</h3>
+      <p>{{ mgmt_report.profit_disposition_text }}</p>
+    </section>
+
+    <section class="report-section">
+      <h2>Resultaträkning</h2>
+      <table class="financial-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="amount">
+              {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
+              else '' }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in income_stmt.lines %}
+          <tr
+            class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+          >
+            <td>{{ line.label }}</td>
+            <td class="amount">
+              {% if not line.is_sum or line.amount != 0 %}{{
+              "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="report-section">
+      <h2>Balansräkning</h2>
+      <h3>Tillgångar</h3>
+      <table class="financial-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="amount">
+              {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
+              else '' }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in balance.assets %}
+          <tr
+            class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+          >
+            <td>{{ line.label }}</td>
+            <td class="amount">
+              {% if not line.is_sum or line.amount != 0 %}{{
+              "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h3>Eget kapital och skulder</h3>
+      <table class="financial-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="amount">
+              {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
+              else '' }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in balance.equity_and_liabilities %}
+          <tr
+            class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+          >
+            <td>{{ line.label }}</td>
+            <td class="amount">
+              {% if not line.is_sum or line.amount != 0 %}{{
+              "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="report-section">
+      <h2>Noter</h2>
+      {% for note in notes.items %}
+      <div class="note">
+        <h3>Not {{ note.number }} – {{ note.title }}</h3>
+        {% if note.content %}
+        <p>{{ note.content }}</p>
+        {% endif %} {% if note.table %}
+        <table>
+          <tbody>
+            {% for label, value in note.table %}
+            <tr>
+              <td>{{ label }}</td>
+              <td class="amount">{{ value }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+
+    <section class="report-section">
+      <h2>Underskrifter</h2>
+      <p>{{ sie.company.address_postal }}, den ____________________</p>
+      <div class="signature-line">
+        <div class="signature-box">
+          <div class="line"></div>
+          <p>{{ sie.company.address_contact }}</p>
+          <p class="role">Styrelseledamot</p>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

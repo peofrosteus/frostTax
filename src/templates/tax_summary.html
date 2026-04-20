@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Deklarationsunderlag – {{ sie.company.name }} – frostTax{% endblock %}
+
+{% block content %}
+<div class="report-header">
+    <div class="report-actions">
+        <a href="{{ url_for('download_sru', file_id=file_id) }}" class="btn btn-primary">Ladda ner SRU-fil</a>
+        <a href="{{ url_for('report', file_id=file_id) }}" class="btn btn-secondary">Tillbaka till årsredovisning</a>
+    </div>
+</div>
+
+<div class="tax-report">
+    <h1>Deklarationsunderlag INK2</h1>
+    <h2>{{ sie.company.name }}</h2>
+    <p class="org-number">Org.nr {{ sie.company.org_number }}</p>
+    {% if sie.company.fiscal_year_start and sie.company.fiscal_year_end %}
+    <p>Räkenskapsår: {{ sie.company.fiscal_year_start.isoformat() }} – {{ sie.company.fiscal_year_end.isoformat() }}</p>
+    {% endif %}
+
+    <p class="info-text">
+        Nedan visas de SRU-koder och belopp som mappats från SIE-filen till INK2-blankettens fält.
+        Ladda ner SRU-filen ovan för digital inlämning till Skatteverket via filöverföring.
+    </p>
+
+    {% set sections = {} %}
+    {% for f in sru_fields %}
+        {% if f.section not in sections %}
+            {% set _ = sections.update({f.section: []}) %}
+        {% endif %}
+        {% set _ = sections[f.section].append(f) %}
+    {% endfor %}
+
+    {% set current_section = {'name': ''} %}
+    {% for f in sru_fields %}
+        {% if f.section != current_section.name %}
+            {% if current_section.name %}
+                </tbody></table>
+            {% endif %}
+            {% set _ = current_section.update({'name': f.section}) %}
+            <h3>{{ f.section }}</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>SRU-kod</th>
+                        <th>INK2-fält</th>
+                        <th>Beskrivning</th>
+                        <th class="amount">Belopp (kr)</th>
+                    </tr>
+                </thead>
+                <tbody>
+        {% endif %}
+        <tr>
+            <td><code>{{ f.sru_code }}</code></td>
+            <td>{{ f.ink2_field }}</td>
+            <td>{{ f.label }}</td>
+            <td class="amount">{{ "{:,.0f}".format(f.amount).replace(",", " ") }}</td>
+        </tr>
+    {% endfor %}
+    {% if sru_fields %}
+        </tbody></table>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends "base.html" %} {% block title %}Årsredovisning – {{ sie.company.name
+}} – frostTax{% endblock %} {% block content %}
+<div class="report-header">
+  <div class="report-actions">
+    <a
+      href="{{ url_for('report_pdf', file_id=file_id, framework=framework) }}"
+      class="btn btn-primary"
+      >Ladda ner PDF</a
+    >
+    <a
+      href="{{ url_for('tax_summary', file_id=file_id) }}"
+      class="btn btn-secondary"
+      >Deklarationsunderlag</a
+    >
+    {% if framework == 'K2' %}
+    <a
+      href="{{ url_for('report', file_id=file_id, framework='K3') }}"
+      class="btn btn-outline"
+      >Byt till K3</a
+    >
+    {% else %}
+    <a
+      href="{{ url_for('report', file_id=file_id, framework='K2') }}"
+      class="btn btn-outline"
+      >Byt till K2</a
+    >
+    {% endif %}
+  </div>
+</div>
+
+<div class="annual-report">
+  <div class="report-cover">
+    <h1>Årsredovisning</h1>
+    <h2>{{ sie.company.name }}</h2>
+    <p class="org-number">Org.nr {{ sie.company.org_number }}</p>
+    {% if sie.company.fiscal_year_start and sie.company.fiscal_year_end %}
+    <p class="fiscal-year">
+      Räkenskapsåret {{ sie.company.fiscal_year_start.isoformat() }} – {{
+      sie.company.fiscal_year_end.isoformat() }}
+    </p>
+    {% endif %}
+    <p class="framework-badge">{{ framework }}</p>
+  </div>
+
+  <!-- Förvaltningsberättelse -->
+  <section class="report-section" id="management-report">
+    <h2>Förvaltningsberättelse</h2>
+
+    <h3>Verksamheten</h3>
+    <p>{{ mgmt_report.business_description }}</p>
+
+    {% if mgmt_report.significant_events %}
+    <h3>Väsentliga händelser under räkenskapsåret</h3>
+    <p>{{ mgmt_report.significant_events }}</p>
+    {% endif %}
+
+    <h3>Flerårsöversikt</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th></th>
+          {% for year in mgmt_report.multi_year_overview %}
+          <th class="amount">{{ year.year }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Nettoomsättning (kr)</td>
+          {% for year in mgmt_report.multi_year_overview %}
+          <td class="amount">
+            {{ "{:,.0f}".format(year.net_revenue).replace(",", " ") }}
+          </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Rörelseresultat (kr)</td>
+          {% for year in mgmt_report.multi_year_overview %}
+          <td class="amount">
+            {{ "{:,.0f}".format(year.operating_result).replace(",", " ") }}
+          </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Årets resultat (kr)</td>
+          {% for year in mgmt_report.multi_year_overview %}
+          <td class="amount">
+            {{ "{:,.0f}".format(year.annual_result).replace(",", " ") }}
+          </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Balansomslutning (kr)</td>
+          {% for year in mgmt_report.multi_year_overview %}
+          <td class="amount">
+            {{ "{:,.0f}".format(year.total_assets).replace(",", " ") }}
+          </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Resultatdisposition</h3>
+    <p>{{ mgmt_report.profit_disposition_text }}</p>
+  </section>
+
+  <!-- Resultaträkning -->
+  <section class="report-section" id="income-statement">
+    <h2>Resultaträkning</h2>
+    <table class="data-table financial-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="amount">
+            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
+            else 'Aktuellt år' }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in income_stmt.lines %}
+        <tr
+          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+        >
+          <td>{{ line.label }}</td>
+          <td class="amount">
+            {% if not line.is_sum or line.amount != 0 %} {{
+            "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Balansräkning -->
+  <section class="report-section" id="balance-sheet">
+    <h2>Balansräkning</h2>
+
+    <h3>Tillgångar</h3>
+    <table class="data-table financial-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="amount">
+            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
+            else 'Aktuellt år' }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in balance.assets %}
+        <tr
+          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+        >
+          <td>{{ line.label }}</td>
+          <td class="amount">
+            {% if not line.is_sum or line.amount != 0 %} {{
+            "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Eget kapital och skulder</h3>
+    <table class="data-table financial-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="amount">
+            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
+            else 'Aktuellt år' }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in balance.equity_and_liabilities %}
+        <tr
+          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+        >
+          <td>{{ line.label }}</td>
+          <td class="amount">
+            {% if not line.is_sum or line.amount != 0 %} {{
+            "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Noter -->
+  <section class="report-section" id="notes">
+    <h2>Noter</h2>
+    {% for note in notes.items %}
+    <div class="note">
+      <h3>Not {{ note.number }} – {{ note.title }}</h3>
+      {% if note.content %}
+      <p>{{ note.content }}</p>
+      {% endif %} {% if note.table %}
+      <table class="data-table">
+        <tbody>
+          {% for label, value in note.table %}
+          <tr>
+            <td>{{ label }}</td>
+            <td class="amount">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+
+  <!-- Underskrifter -->
+  <section class="report-section" id="signatures">
+    <h2>Underskrifter</h2>
+    <p>{{ sie.company.address_postal }}, den ____________________</p>
+    <div class="signature-line">
+      <div class="signature-box">
+        <div class="line"></div>
+        <p>{{ sie.company.address_contact }}</p>
+        <p class="role">Styrelseledamot</p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
