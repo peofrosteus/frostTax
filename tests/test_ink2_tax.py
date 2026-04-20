@@ -1,4 +1,4 @@
-"""Tests for INK2 tax calculation."""
+"""Tests for INK2 page 1 (correct field labels matching SKV blankett)."""
 
 import sys
 from pathlib import Path
@@ -7,79 +7,65 @@ from decimal import Decimal
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.sie_parser.parser import parse_sie_file
-from src.tax.ink2_tax_calc import calculate_ink2_tax, CORPORATE_TAX_RATE
+from src.tax.ink2_tax_calc import calculate_ink2_tax
 
 SIE_FILE = Path(__file__).parent.parent / "sieFiles" / "FrosteusConsultingAB20260420_125427.se"
 
 
-def test_bokfort_resultat():
+def test_field_1_1_is_overskott():
+    """1.1 should be 'Överskott av näringsverksamhet', not 'Bokfört resultat'."""
     sie = parse_sie_file(SIE_FILE)
     calc = calculate_ink2_tax(sie)
-    # Bokfört resultat = resultat före skatt = 12036
-    assert calc.get_field("1.1").amount == Decimal("12036")
+    f11 = calc.get_field("1.1")
+    assert "Överskott" in f11.label
+    assert f11.amount == Decimal("12036")
 
 
-def test_ej_avdragsgilla_zero_for_this_file():
+def test_field_1_2_is_underskott():
+    """1.2 holds underskott (0 in this case)."""
     sie = parse_sie_file(SIE_FILE)
     calc = calculate_ink2_tax(sie)
-    # No non-deductible costs booked in this SIE file
     assert calc.get_field("1.2").amount == Decimal(0)
+    assert "Underskott" in calc.get_field("1.2").label
 
 
-def test_ej_skattepliktiga_zero_for_this_file():
+def test_field_1_4_is_slp():
+    """1.4 should be SLP underlag, not 'skattemässigt resultat'."""
     sie = parse_sie_file(SIE_FILE)
     calc = calculate_ink2_tax(sie)
-    # No tax-free income in this SIE file
-    assert calc.get_field("1.3").amount == Decimal(0)
+    f14 = calc.get_field("1.4")
+    assert "löneskatt" in f14.label.lower()
 
 
-def test_resultat_fore_dispositioner():
+def test_no_fastighetsavgift():
+    """Frosteus Consulting has no fastigheter, so 1.8–1.15 should be 0."""
     sie = parse_sie_file(SIE_FILE)
     calc = calculate_ink2_tax(sie)
-    # 1.4 = 1.1 + 1.2 - 1.3 = 12036 + 0 - 0 = 12036
-    assert calc.get_field("1.4").amount == Decimal("12036")
+    for fid in ["1.8", "1.9", "1.10", "1.11", "1.12", "1.13", "1.14", "1.15"]:
+        assert calc.get_field(fid).amount == Decimal(0)
 
 
-def test_no_periodiseringsfond():
+def test_overskott_matches_ink2s():
+    """1.1 should equal INK2S 4.15."""
     sie = parse_sie_file(SIE_FILE)
     calc = calculate_ink2_tax(sie)
-    # No periodiseringsfond activity
-    assert calc.get_field("1.5").amount == Decimal(0)
-    assert calc.get_field("1.6").amount == Decimal(0)
-    assert calc.get_field("1.7").amount == Decimal(0)
+
+    from src.tax.ink2s_calc import calculate_ink2s
+    ink2s = calculate_ink2s(sie)
+
+    assert calc.get_field("1.1").amount == ink2s.get_field("4.15").amount
 
 
-def test_overskott_naringsverksamhet():
-    sie = parse_sie_file(SIE_FILE)
-    calc = calculate_ink2_tax(sie)
-    # Same as bokfört resultat since no adjustments
-    assert calc.get_field("1.11").amount == Decimal("12036")
-
-
-def test_skattemassigt_resultat():
-    sie = parse_sie_file(SIE_FILE)
-    calc = calculate_ink2_tax(sie)
-    assert calc.get_field("1.13").amount == Decimal("12036")
-
-
-def test_bolagsskatt():
-    sie = parse_sie_file(SIE_FILE)
-    calc = calculate_ink2_tax(sie)
-    # 12036 * 20.6% = 2479.416 → rounded to 2479
-    expected_tax = Decimal("2479")
-    assert calc.get_field("1.14").amount == expected_tax
-
-
-def test_skatt_att_betala():
-    sie = parse_sie_file(SIE_FILE)
-    calc = calculate_ink2_tax(sie)
-    # Same as bolagsskatt since no foreign tax credit
-    assert calc.get_field("1.16").amount == calc.get_field("1.14").amount
-
-
-def test_all_16_fields_present():
+def test_all_fields_present():
+    """All 18 fields on page 1 should be present."""
     sie = parse_sie_file(SIE_FILE)
     calc = calculate_ink2_tax(sie)
     field_ids = [f.field_id for f in calc.fields]
-    for i in range(1, 17):
-        assert f"1.{i}" in field_ids, f"Field 1.{i} missing"
+    expected = [
+        "1.1", "1.2", "1.3", "1.4", "1.5",
+        "1.6a", "1.6b", "1.7a", "1.7b",
+        "1.8", "1.9", "1.10", "1.11", "1.12",
+        "1.13", "1.14", "1.15", "1.16",
+    ]
+    for fid in expected:
+        assert fid in field_ids, f"Field {fid} missing"

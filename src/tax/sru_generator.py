@@ -17,20 +17,8 @@ from io import StringIO
 
 from src.sie_parser.models import SieFile
 from src.tax.sru_mapping import aggregate_sru
-from src.tax.ink2_tax_calc import calculate_ink2_tax
+from src.tax.ink2_tax_calc import calculate_ink2_tax, INK2_PAGE1_SRU
 from src.tax.ink2s_calc import calculate_ink2s, INK2S_SRU
-
-# SRU field codes for INK2 page 1 (skatteberäkning)
-INK2_PAGE1_SRU = {
-    "1.1": "7014",
-    "1.2": "7015",
-    "1.3": "7016",
-    "1.5": "7007",
-    "1.7": "7006",
-    "1.11": "7017",
-    "1.13": "7050",
-    "1.14": "7051",
-}
 
 
 def generate_sru_file(sie: SieFile) -> str:

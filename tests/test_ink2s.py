@@ -64,8 +64,8 @@ def test_all_fields_present():
         "4.6a", "4.6b", "4.6c", "4.6d", "4.6e",
         "4.7a", "4.7b", "4.7c", "4.7d", "4.7e", "4.7f",
         "4.8a", "4.8b", "4.8c", "4.8d",
-        "4.9+", "4.9-", "4.10+", "4.10-",
-        "4.11", "4.12", "4.13+", "4.13-",
+        "4.9", "4.10",
+        "4.11", "4.12", "4.13",
         "4.14a", "4.14b", "4.14c",
         "4.15", "4.16",
         "4.17", "4.18", "4.19", "4.20", "4.21", "4.22",
@@ -75,10 +75,15 @@ def test_all_fields_present():
 
 
 def test_ink2s_sru_codes_defined():
-    """All computed fields should have SRU codes."""
+    """All computed fields (4.1–4.16) should have SRU codes."""
     sie = parse_sie_file(SIE_FILE)
     ink2s = calculate_ink2s(sie)
+    # 4.17–4.22 are "Övriga uppgifter" without official SRU codes
     for f in ink2s.fields:
+        if f.field_id.startswith("4.1") and len(f.field_id) > 3 and f.field_id[2:] >= "17":
+            continue
+        if f.field_id in ("4.17", "4.18", "4.19", "4.20", "4.21", "4.22"):
+            continue
         assert f.field_id in INK2S_SRU, f"No SRU code for {f.field_id}"
 
 

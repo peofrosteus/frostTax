@@ -28,7 +28,7 @@ class SruField:
 
 
 # Mapping from SRU code to (INK2R field, label, section)
-# Based on Skatteverkets blankett INK2R (SKV 2002)
+# Based on srufiler.se and Skatteverkets blankett INK2R (SKV 2002)
 SRU_TO_INK2: dict[str, tuple[str, str, str]] = {
     # ── Tillgångar / Anläggningstillgångar ──
     # Immateriella anläggningstillgångar
@@ -41,10 +41,10 @@ SRU_TO_INK2: dict[str, tuple[str, str, str]] = {
     "7217": ("2.6", "Pågående nyanläggningar och förskott avseende materiella anläggningstillgångar", "Tillgångar"),
     # Finansiella anläggningstillgångar
     "7230": ("2.7", "Andelar i koncernföretag", "Tillgångar"),
-    "7233": ("2.8", "Andelar i intresseföretag och gemensamt styrda företag", "Tillgångar"),
-    "7234": ("2.9", "Ägarintressen i övriga företag och andra långfristiga värdepappersinnehav", "Tillgångar"),
-    "7236": ("2.10", "Fordringar hos koncern-, intresse- och gemensamt styrda företag", "Tillgångar"),
-    "7237": ("2.11", "Lån till delägare eller närstående", "Tillgångar"),
+    "7231": ("2.8", "Andelar i intresseföretag och gemensamt styrda företag", "Tillgångar"),
+    "7233": ("2.9", "Ägarintressen i övriga företag och andra långfristiga värdepappersinnehav", "Tillgångar"),
+    "7232": ("2.10", "Fordringar hos koncern-, intresse- och gemensamt styrda företag", "Tillgångar"),
+    "7234": ("2.11", "Lån till delägare eller närstående", "Tillgångar"),
     "7235": ("2.12", "Fordringar hos övriga företag och andra långfristiga fordringar", "Tillgångar"),
 
     # ── Omsättningstillgångar ──
@@ -62,7 +62,7 @@ SRU_TO_INK2: dict[str, tuple[str, str, str]] = {
     "7262": ("2.22", "Upparbetad men ej fakturerad intäkt", "Omsättningstillgångar"),
     "7263": ("2.23", "Förutbetalda kostnader och upplupna intäkter", "Omsättningstillgångar"),
     # Kortfristiga placeringar
-    "7272": ("2.24", "Andelar i koncernföretag", "Omsättningstillgångar"),
+    "7270": ("2.24", "Andelar i koncernföretag", "Omsättningstillgångar"),
     "7271": ("2.25", "Övriga kortfristiga placeringar", "Omsättningstillgångar"),
     # Kassa och bank
     "7281": ("2.26", "Kassa, bank och redovisningsmedel", "Omsättningstillgångar"),
@@ -106,31 +106,36 @@ SRU_TO_INK2: dict[str, tuple[str, str, str]] = {
     "7370": ("2.50", "Upplupna kostnader och förutbetalda intäkter", "Kortfristiga skulder"),
 
     # ── Resultaträkning (INK2R sid 2, fält 3.1–3.27) ──
+    # Rörelseintäkter
     "7410": ("3.1", "Nettoomsättning", "Resultaträkning – Rörelseintäkter"),
     "7411": ("3.2", "Förändring av lager av produkter i arbete, färdiga varor och pågående arbete", "Resultaträkning – Rörelseintäkter"),
     "7412": ("3.3", "Aktiverat arbete för egen räkning", "Resultaträkning – Rörelseintäkter"),
     "7413": ("3.4", "Övriga rörelseintäkter", "Resultaträkning – Rörelseintäkter"),
-    "7510": ("3.5", "Råvaror och förnödenheter", "Resultaträkning – Rörelsekostnader"),
-    "7511": ("3.6", "Handelsvaror", "Resultaträkning – Rörelsekostnader"),
-    "7512": ("3.5", "Råvaror och förnödenheter", "Resultaträkning – Rörelsekostnader"),
+    # Rörelsekostnader
+    "7511": ("3.5", "Råvaror och förnödenheter", "Resultaträkning – Rörelsekostnader"),
+    "7512": ("3.6", "Handelsvaror", "Resultaträkning – Rörelsekostnader"),
     "7513": ("3.7", "Övriga externa kostnader", "Resultaträkning – Rörelsekostnader"),
     "7514": ("3.8", "Personalkostnader", "Resultaträkning – Rörelsekostnader"),
     "7515": ("3.9", "Av- och nedskrivningar av materiella och immateriella anläggningstillgångar", "Resultaträkning – Rörelsekostnader"),
     "7516": ("3.10", "Nedskrivningar av omsättningstillgångar utöver normala nedskrivningar", "Resultaträkning – Rörelsekostnader"),
     "7517": ("3.11", "Övriga rörelsekostnader", "Resultaträkning – Rörelsekostnader"),
-    "7416": ("3.12", "Resultat från andelar i koncernföretag", "Resultaträkning – Finansiella poster"),
-    "7418": ("3.13", "Resultat från andelar i intresseföretag och gemensamt styrda företag", "Resultaträkning – Finansiella poster"),
-    "7419": ("3.14", "Resultat från övriga företag som det finns ett ägarintresse i", "Resultaträkning – Finansiella poster"),
-    "7414": ("3.15", "Resultat från övriga finansiella anläggningstillgångar", "Resultaträkning – Finansiella poster"),
+    # Finansiella poster
+    "7414": ("3.12", "Resultat från andelar i koncernföretag", "Resultaträkning – Finansiella poster"),
+    "7415": ("3.13", "Resultat från andelar i intresseföretag och gemensamt styrda företag", "Resultaträkning – Finansiella poster"),
+    "7423": ("3.14", "Resultat från övriga företag som det finns ett ägarintresse i", "Resultaträkning – Finansiella poster"),
+    "7416": ("3.15", "Resultat från övriga finansiella anläggningstillgångar", "Resultaträkning – Finansiella poster"),
     "7417": ("3.16", "Övriga ränteintäkter och liknande resultatposter", "Resultaträkning – Finansiella poster"),
     "7521": ("3.17", "Nedskrivningar av finansiella anläggningstillgångar och kortfristiga placeringar", "Resultaträkning – Finansiella poster"),
     "7522": ("3.18", "Räntekostnader och liknande resultatposter", "Resultaträkning – Finansiella poster"),
-    "7523": ("3.19", "Lämnade koncernbidrag", "Resultaträkning – Bokslutsdispositioner"),
-    "7524": ("3.20", "Mottagna koncernbidrag", "Resultaträkning – Bokslutsdispositioner"),
+    # Bokslutsdispositioner
+    "7524": ("3.19", "Lämnade koncernbidrag", "Resultaträkning – Bokslutsdispositioner"),
+    "7419": ("3.20", "Mottagna koncernbidrag", "Resultaträkning – Bokslutsdispositioner"),
     "7420": ("3.21", "Återföring av periodiseringsfond", "Resultaträkning – Bokslutsdispositioner"),
     "7525": ("3.22", "Avsättning till periodiseringsfond", "Resultaträkning – Bokslutsdispositioner"),
-    "7526": ("3.23", "Förändring av överavskrivningar", "Resultaträkning – Bokslutsdispositioner"),
-    "7527": ("3.24", "Övriga bokslutsdispositioner", "Resultaträkning – Bokslutsdispositioner"),
+    "7421": ("3.23", "Förändring av överavskrivningar", "Resultaträkning – Bokslutsdispositioner"),
+    "7526": ("3.23", "Förändring av överavskrivningar", "Resultaträkning – Bokslutsdispositioner"),  # Fortnox alt. code
+    "7422": ("3.24", "Övriga bokslutsdispositioner", "Resultaträkning – Bokslutsdispositioner"),
+    # Skatt och resultat
     "7528": ("3.25", "Skatt på årets resultat", "Resultaträkning – Skatt och resultat"),
     "7450": ("3.26", "Årets resultat, vinst", "Resultaträkning – Skatt och resultat"),
     "7550": ("3.27", "Årets resultat, förlust", "Resultaträkning – Skatt och resultat"),

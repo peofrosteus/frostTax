@@ -49,52 +49,44 @@ class Ink2sCalculation:
         return self.get_field("4.16").amount
 
 
-# SRU codes for INK2S fields (Skatteverkets fältkoder)
+# SRU codes for INK2S fields
+# Source: srufiler.se/sru-filer/blanketter/ink2s-skattemassiga-justeringar
 INK2S_SRU: dict[str, str] = {
-    "4.1": "7650",
-    "4.2": "7651",
-    "4.3a": "7652",
-    "4.3b": "7653",
-    "4.3c": "7654",
-    "4.4a": "7655",
-    "4.4b": "7656",
-    "4.5a": "7657",
-    "4.5b": "7658",
-    "4.5c": "7659",
-    "4.6a": "7660",
-    "4.6b": "7661",
-    "4.6c": "7662",
-    "4.6d": "7663",
-    "4.6e": "7664",
-    "4.7a": "7665",
-    "4.7b": "7666",
-    "4.7c": "7667",
-    "4.7d": "7668",
-    "4.7e": "7669",
-    "4.7f": "7670",
-    "4.8a": "7671",
-    "4.8b": "7672",
-    "4.8c": "7673",
-    "4.8d": "7674",
-    "4.9+": "7675",
-    "4.9-": "7676",
-    "4.10+": "7677",
-    "4.10-": "7678",
-    "4.11": "7679",
-    "4.12": "7680",
-    "4.13+": "7681",
-    "4.13-": "7682",
-    "4.14a": "7683",
-    "4.14b": "7684",
-    "4.14c": "7685",
-    "4.15": "7686",
-    "4.16": "7687",
-    "4.17": "7688",
-    "4.18": "7689",
-    "4.19": "7690",
-    "4.20": "7691",
-    "4.21": "7692",
-    "4.22": "7693",
+    "4.1": "7650",    # Årets resultat, vinst
+    "4.2": "7750",    # Årets resultat, förlust
+    "4.3a": "7651",   # Skatt på årets resultat
+    "4.3b": "7652",   # Nedskrivning av finansiella tillgångar
+    "4.3c": "7653",   # Andra bokförda kostnader
+    "4.4a": "7751",   # Lämnade koncernbidrag
+    "4.4b": "7764",   # Andra ej bokförda kostnader
+    "4.5a": "7752",   # Ackordsvinster
+    "4.5b": "7753",   # Utdelning
+    "4.5c": "7754",   # Andra bokförda intäkter
+    "4.6a": "7654",   # Schablonintäkt periodiseringsfonder
+    "4.6b": "7668",   # Schablonintäkt fondandelar
+    "4.6c": "7655",   # Mottagna koncernbidrag
+    "4.6d": "7667",   # Uppräknat belopp periodiseringsfond
+    "4.6e": "7665",   # Andra ej bokförda intäkter
+    "4.7a": "7755",   # Bokförd vinst
+    "4.7b": "7656",   # Bokförd förlust
+    "4.7c": "7756",   # Uppskov kapitalvinst N4
+    "4.7d": "7657",   # Återfört uppskov N4
+    "4.7e": "7658",   # Kapitalvinst
+    "4.7f": "7757",   # Kapitalförlust
+    "4.8a": "7758",   # Bokförd intäkt/vinst HB
+    "4.8b": "7659",   # Skattemässigt överskott N3B
+    "4.8c": "7660",   # Bokförd kostnad/förlust HB
+    "4.8d": "7759",   # Skattemässigt underskott N3B
+    "4.9": "7666",    # Justering avskrivning byggnader/inventarier
+    "4.10": "7661",   # Justering avyttring fastighet
+    "4.11": "7761",   # Skogsavdrag
+    "4.12": "7662",   # Återföringar fastighet
+    "4.13": "7663",   # Andra skattemässiga justeringar
+    "4.14a": "7763",  # Outnyttjat underskott
+    "4.14b": "7664",  # Reduktion beloppsspärr
+    "4.14c": "7670",  # Reduktion koncernbidragsspärr
+    "4.15": "8020",   # Överskott
+    "4.16": "8021",   # Underskott
 }
 
 
@@ -228,12 +220,11 @@ def calculate_ink2s(sie: SieFile) -> Ink2sCalculation:
     _add(Ink2sField("4.8d", "Skattemässigt underskott enl. N3B", Decimal(0), "-", editable=True))
 
     # ── 4.9: Skattemässig justering avskrivning byggnader/inventarier ──
-    _add(Ink2sField("4.9+", "Skattemässig justering avskrivning (+)", Decimal(0), "+", editable=True))
-    _add(Ink2sField("4.9-", "Skattemässig justering avskrivning (−)", Decimal(0), "-", editable=True))
+    # Positive = ökar det skattemässiga resultatet, negative = minskar
+    _add(Ink2sField("4.9", "Skattemässig justering avskrivning byggnader/inventarier", Decimal(0), "+/−", editable=True))
 
     # ── 4.10: Avyttring av näringsfastighet ──
-    _add(Ink2sField("4.10+", "Skattemässig justering avyttring fastighet (+)", Decimal(0), "+", editable=True))
-    _add(Ink2sField("4.10-", "Skattemässig justering avyttring fastighet (−)", Decimal(0), "-", editable=True))
+    _add(Ink2sField("4.10", "Skattemässig justering avyttring fastighet", Decimal(0), "+/−", editable=True))
 
     # ── 4.11: Skogs-/substansminskningsavdrag ──
     _add(Ink2sField("4.11", "Skogs-/substansminskningsavdrag", Decimal(0), "-", editable=True))
@@ -242,8 +233,7 @@ def calculate_ink2s(sie: SieFile) -> Ink2sCalculation:
     _add(Ink2sField("4.12", "Återföringar vid avyttring av fastighet", Decimal(0), "+", editable=True))
 
     # ── 4.13: Andra skattemässiga justeringar ──
-    _add(Ink2sField("4.13+", "Andra skattemässiga justeringar (+)", Decimal(0), "+", editable=True))
-    _add(Ink2sField("4.13-", "Andra skattemässiga justeringar (−)", Decimal(0), "-", editable=True))
+    _add(Ink2sField("4.13", "Andra skattemässiga justeringar", Decimal(0), "+/−", editable=True))
 
     # ── 4.14: Underskott ──
     _add(Ink2sField("4.14a", "Outnyttjat underskott från föregående år", Decimal(0), "-", editable=True))
@@ -321,18 +311,18 @@ def _compute_result(calc: Ink2sCalculation) -> None:
     # Handelsbolag (4.8)
     result += -g("4.8a").amount + g("4.8b").amount + g("4.8c").amount - g("4.8d").amount
 
-    # Avskrivningsjusteringar (4.9)
-    result += g("4.9+").amount - g("4.9-").amount
+    # Avskrivningsjusteringar (4.9) – positive increases, negative decreases
+    result += g("4.9").amount
 
-    # Fastighetsjusteringar (4.10)
-    result += g("4.10+").amount - g("4.10-").amount
+    # Fastighetsjusteringar (4.10) – positive increases, negative decreases
+    result += g("4.10").amount
 
     # Skogsavdrag (4.11) and återföringar (4.12)
     result -= g("4.11").amount
     result += g("4.12").amount
 
-    # Andra justeringar (4.13)
-    result += g("4.13+").amount - g("4.13-").amount
+    # Andra justeringar (4.13) – positive increases, negative decreases
+    result += g("4.13").amount
 
     # Underskott (4.14)
     result -= g("4.14a").amount

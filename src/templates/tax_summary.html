@@ -36,12 +36,11 @@
         </thead>
         <tbody>
             {% for tf in tax_calc.fields %}
-            <tr class="{% if tf.field_id in ['1.4', '1.11', '1.13', '1.14', '1.16'] %}sum-row{% endif %}">
+            <tr class="{% if tf.field_id in ['1.1', '1.2'] %}sum-row{% endif %}">
                 <td><strong>{{ tf.field_id }}</strong></td>
                 <td>{{ tf.label }}</td>
                 <td class="amount">{{ "{:,.0f}".format(tf.amount).replace(",", " ") }}</td>
                 <td>
-                    {% if tf.editable %}<span class="editable-badge">Redigerbar</span>{% endif %}
                     {% if tf.details %}
                     <details>
                         <summary>Detaljer</summary>
@@ -111,7 +110,6 @@
                 <td class="amount">{{ sf.sign }}</td>
                 <td class="amount">{{ "{:,.0f}".format(sf.amount).replace(",", " ") }}</td>
                 <td>
-                    {% if sf.editable %}<span class="editable-badge">Redigerbar</span>{% endif %}
                     {% if sf.details %}
                     <details>
                         <summary>Detaljer</summary>
