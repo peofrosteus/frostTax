@@ -102,7 +102,7 @@
         </div>
         <div class="form-group">
           <label for="profit_disposition_text"
-            ><strong>Resultatdisposition</strong></label
+            ><strong>Resultatdisposition (fritext, lämna tomt för automatisk)</strong></label
           >
           <textarea
             name="profit_disposition_text"
@@ -126,8 +126,11 @@
 
     <!-- Display view -->
     <div id="mgmt-display">
-      <h3>Verksamheten</h3>
-      <p>{{ mgmt_report.business_description }}</p>
+      <h3>Allmänt om verksamheten</h3>
+      {% if mgmt_report.company_location %}
+      <p>Bolaget har sitt säte i {{ mgmt_report.company_location }}.</p>
+      {% endif %}
+      <p>{{ mgmt_report.business_description }}</p></p>
 
       {% if mgmt_report.significant_events %}
       <h3>Väsentliga händelser under räkenskapsåret</h3>
@@ -157,10 +160,10 @@
             {% endfor %}
           </tr>
           <tr>
-            <td>Rörelseresultat (kr)</td>
+            <td>Resultat efter finansiella poster (kr)</td>
             {% for year in mgmt_report.multi_year_overview %}
             <td class="amount">
-              {{ "{:,.0f}".format(year.operating_result).replace(",", " ") }}
+              {{ "{:,.0f}".format(year.result_after_financial).replace(",", " ") }}
             </td>
             {% endfor %}
           </tr>
@@ -184,7 +187,28 @@
       </table>
 
       <h3>Resultatdisposition</h3>
+      {% if mgmt_report.profit_disposition_text %}
       <p>{{ mgmt_report.profit_disposition_text }}</p>
+      {% else %}
+      <p>Styrelsen föreslår att till förfogande stående medel (kr):</p>
+      <table class="data-table">
+        <tbody>
+          <tr>
+            <td>Balanserat resultat</td>
+            <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",", " ") }}</td>
+          </tr>
+          <tr>
+            <td>Årets resultat</td>
+            <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",", " ") }}</td>
+          </tr>
+          <tr class="sum-row">
+            <td>Summa</td>
+            <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",", " ") }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>disponeras så att i ny räkning överförs {{ "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",", " ") }} kr.</p>
+      {% endif %}
     </div>
   </section>
 

@@ -94,4 +94,14 @@ def generate_notes(sie: SieFile, framework: str = "K2") -> Notes:
         ))
         note_num += 1
 
+    # Ställda säkerheter och ansvarsförbindelser (K2 5.11, ÅRL 5:14-15)
+    # Must always be disclosed, even when there are none.
+    stallda_sakerheter = sie.sum_ub_range(8300, 8399)  # Placeholder – typically off-balance
+    notes.items.append(Note(
+        number=note_num,
+        title="Ställda säkerheter och ansvarsförbindelser",
+        content="Inga ställda säkerheter. Inga ansvarsförbindelser.",
+    ))
+    note_num += 1
+
     return notes

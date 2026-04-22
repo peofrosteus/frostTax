@@ -123,7 +123,10 @@
     <div class="page-break"></div>
 
     <h2>Förvaltningsberättelse</h2>
-    <h3>Verksamheten</h3>
+    <h3>Allmänt om verksamheten</h3>
+    {% if mgmt_report.company_location %}
+    <p>Bolaget har sitt säte i {{ mgmt_report.company_location }}.</p>
+    {% endif %}
     <p>{{ mgmt_report.business_description }}</p>
 
     {% if mgmt_report.significant_events %}
@@ -146,9 +149,9 @@
         {% endfor %}
       </tr>
       <tr>
-        <td>Rörelseresultat (kr)</td>
+        <td>Resultat efter finansiella poster (kr)</td>
         {% for y in mgmt_report.multi_year_overview %}
-        <td class="amount">{{ "{:,.0f}".format(y.operating_result).replace(",", "\u00a0") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(y.result_after_financial).replace(",", "\u00a0") }}</td>
         {% endfor %}
       </tr>
       <tr>
@@ -166,7 +169,26 @@
     </table>
 
     <h3>Resultatdisposition</h3>
+    {% if mgmt_report.profit_disposition_text %}
     <p>{{ mgmt_report.profit_disposition_text }}</p>
+    {% else %}
+    <p>Styrelsen föreslår att till förfogande stående medel (kr):</p>
+    <table>
+      <tr>
+        <td>Balanserat resultat</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",", "\u00a0") }}</td>
+      </tr>
+      <tr>
+        <td>Årets resultat</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",", "\u00a0") }}</td>
+      </tr>
+      <tr class="sum-row">
+        <td>Summa</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",", "\u00a0") }}</td>
+      </tr>
+    </table>
+    <p>disponeras så att i ny räkning överförs {{ "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",", "\u00a0") }} kr.</p>
+    {% endif %}
 
     <h2>Resultaträkning</h2>
     <table>
