@@ -454,15 +454,65 @@
 
   <!-- Underskrifter -->
   <section class="report-section" id="signatures">
-    <h2>Underskrifter</h2>
-    <p>{{ sie.company.address_postal }}, den ____________________</p>
-    <div class="signature-line">
-      <div class="signature-box">
-        <div class="line"></div>
-        <p>{{ sie.company.address_contact }}</p>
-        <p class="role">Styrelseledamot</p>
+    <h2>
+      Underskrifter
+      <button type="button" class="btn btn-outline btn-sm" onclick="toggleSigEdit()">Redigera</button>
+    </h2>
+
+    <!-- Edit form (hidden by default) -->
+    <div id="sig-edit-form" style="display: none">
+      <form method="post" action="{{ url_for('edit_signatures', file_id=file_id) }}">
+        <div id="sig-rows">
+          {% for sig in signatures %}
+          <div class="sig-edit-row form-group">
+            <input type="text" name="sig_name" value="{{ sig.name }}" placeholder="Namn" class="form-control" style="display:inline-block;width:55%" />
+            <input type="text" name="sig_role" value="{{ sig.role }}" placeholder="Roll" class="form-control" style="display:inline-block;width:35%" />
+            <button type="button" class="btn btn-outline btn-sm" onclick="this.parentElement.remove()">✕</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addSigRow()" style="margin-bottom:12px">+ Lägg till person</button>
+        <br />
+        <button type="submit" class="btn btn-primary">Spara underskrifter</button>
+        <button type="button" class="btn btn-outline" onclick="toggleSigEdit()">Avbryt</button>
+      </form>
+    </div>
+
+    <!-- Display view -->
+    <div id="sig-display">
+      <p>{{ sie.company.address_postal }}, den ____________________</p>
+      {% for sig in signatures %}
+      <div class="signature-line">
+        <div class="signature-box">
+          <div class="line"></div>
+          <p>{{ sig.name }}</p>
+          <p class="role">{{ sig.role }}</p>
+        </div>
       </div>
+      {% endfor %}
     </div>
   </section>
 </div>
+
+<script>
+function toggleSigEdit() {
+  var form = document.getElementById("sig-edit-form");
+  var display = document.getElementById("sig-display");
+  if (form.style.display === "none") {
+    form.style.display = "block";
+    display.style.display = "none";
+  } else {
+    form.style.display = "none";
+    display.style.display = "block";
+  }
+}
+function addSigRow() {
+  var row = document.createElement("div");
+  row.className = "sig-edit-row form-group";
+  row.innerHTML = '<input type="text" name="sig_name" placeholder="Namn" class="form-control" style="display:inline-block;width:55%" />'
+    + ' <input type="text" name="sig_role" value="Styrelseledamot" placeholder="Roll" class="form-control" style="display:inline-block;width:35%" />'
+    + ' <button type="button" class="btn btn-outline btn-sm" onclick="this.parentElement.remove()">✕</button>';
+  document.getElementById("sig-rows").appendChild(row);
+}
+</script>
 {% endblock %}

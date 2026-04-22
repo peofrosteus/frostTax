@@ -40,6 +40,7 @@ app.secret_key = os.environ.get("SECRET_KEY", os.urandom(32))
 _parsed_files: dict[str, SieFile] = {}
 _file_names: dict[str, str] = {}
 _mgmt_edits: dict[str, dict[str, str]] = {}  # file_id -> management report overrides
+_signature_edits: dict[str, list[dict[str, str]]] = {}  # file_id -> [{name, role}]
 
 UPLOAD_DIR = Path(__file__).parent.parent / "sieFiles"
 
@@ -95,6 +96,14 @@ def load_local(filename: str):
         return redirect(url_for("index"))
 
 
+def _get_signatures(sie: SieFile, file_id: str) -> list[dict[str, str]]:
+    """Get signature list, defaulting to SIE contact as styrelseledamot."""
+    if file_id in _signature_edits:
+        return _signature_edits[file_id]
+    name = sie.company.address_contact or ""
+    return [{"name": name, "role": "Styrelseledamot"}] if name else []
+
+
 def _get_mgmt_report(sie: SieFile, file_id: str) -> ManagementReport:
     """Generate management report with any user edits applied."""
     edits = _mgmt_edits.get(file_id, {})
@@ -137,6 +146,7 @@ def report(file_id: str):
         file_id=file_id,
         filename=_file_names.get(file_id, ""),
         edits=_mgmt_edits.get(file_id, {}),
+        signatures=_get_signatures(sie, file_id),
     )
 
 
@@ -154,6 +164,26 @@ def edit_mgmt_report(file_id: str):
         "profit_disposition_text": request.form.get("profit_disposition_text", "").strip(),
     }
     flash("Förvaltningsberättelsen har uppdaterats.", "success")
+    return redirect(url_for("report", file_id=file_id))
+
+
+@app.route("/report/<file_id>/edit-signatures", methods=["POST"])
+def edit_signatures(file_id: str):
+    """Save signature list edits."""
+    if file_id not in _parsed_files:
+        flash("Filen har gått ut. Ladda upp igen.", "error")
+        return redirect(url_for("index"))
+
+    names = request.form.getlist("sig_name")
+    roles = request.form.getlist("sig_role")
+    sigs = []
+    for name, role in zip(names, roles):
+        name = name.strip()
+        role = role.strip()
+        if name:
+            sigs.append({"name": name, "role": role or "Styrelseledamot"})
+    _signature_edits[file_id] = sigs
+    flash("Underskrifterna har uppdaterats.", "success")
     return redirect(url_for("report", file_id=file_id))
 
 
@@ -183,6 +213,7 @@ def report_pdf(file_id: str):
         cash_flow=cash_flow,
         equity_changes=equity_chg,
         framework=framework,
+        signatures=_get_signatures(sie, file_id),
     )
 
     from io import BytesIO

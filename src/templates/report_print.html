@@ -323,8 +323,10 @@
 
     <h2>Underskrifter</h2>
     <p>{{ sie.company.address_postal }}, den ____________________</p>
+    {% for sig in signatures %}
     <div class="sig-line"></div>
-    <p>{{ sie.company.address_contact }}</p>
-    <p class="role">Styrelseledamot</p>
+    <p>{{ sig.name }}</p>
+    <p class="role">{{ sig.role }}</p>
+    {% endfor %}
   </body>
 </html>
