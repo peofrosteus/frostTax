@@ -336,6 +336,47 @@ details summary {
   font-size: 0.85rem;
 }
 
+/* ===== Management report edit form ===== */
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+}
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+  resize: vertical;
+}
+.form-control:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+#mgmt-edit-form {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+#mgmt-edit-form .btn {
+  margin-right: 8px;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
   .report-actions {

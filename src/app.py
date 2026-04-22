@@ -37,6 +37,7 @@ app.secret_key = os.environ.get("SECRET_KEY", os.urandom(32))
 # In-memory store for parsed SIE files (session-based)
 _parsed_files: dict[str, SieFile] = {}
 _file_names: dict[str, str] = {}
+_mgmt_edits: dict[str, dict[str, str]] = {}  # file_id -> management report overrides
 
 UPLOAD_DIR = Path(__file__).parent.parent / "sieFiles"
 
@@ -92,6 +93,18 @@ def load_local(filename: str):
         return redirect(url_for("index"))
 
 
+def _get_mgmt_report(sie: SieFile, file_id: str) -> "ManagementReport":
+    """Generate management report with any user edits applied."""
+    edits = _mgmt_edits.get(file_id, {})
+    return generate_management_report(
+        sie,
+        business_description=edits.get("business_description", ""),
+        significant_events=edits.get("significant_events", ""),
+        expected_future_development=edits.get("expected_future_development", ""),
+        profit_disposition_text=edits.get("profit_disposition_text", ""),
+    )
+
+
 @app.route("/report/<file_id>")
 def report(file_id: str):
     sie = _parsed_files.get(file_id)
@@ -102,7 +115,7 @@ def report(file_id: str):
     framework = request.args.get("framework", "K2")
     income_stmt = generate_income_statement(sie, framework=framework)
     balance = generate_balance_sheet(sie, framework=framework)
-    mgmt_report = generate_management_report(sie)
+    mgmt_report = _get_mgmt_report(sie, file_id)
     notes = generate_notes(sie, framework=framework)
 
     return render_template(
@@ -115,7 +128,25 @@ def report(file_id: str):
         framework=framework,
         file_id=file_id,
         filename=_file_names.get(file_id, ""),
+        edits=_mgmt_edits.get(file_id, {}),
     )
+
+
+@app.route("/report/<file_id>/edit", methods=["POST"])
+def edit_mgmt_report(file_id: str):
+    """Save management report edits and redirect back to report."""
+    if file_id not in _parsed_files:
+        flash("Filen har gått ut. Ladda upp igen.", "error")
+        return redirect(url_for("index"))
+
+    _mgmt_edits[file_id] = {
+        "business_description": request.form.get("business_description", "").strip(),
+        "significant_events": request.form.get("significant_events", "").strip(),
+        "expected_future_development": request.form.get("expected_future_development", "").strip(),
+        "profit_disposition_text": request.form.get("profit_disposition_text", "").strip(),
+    }
+    flash("Förvaltningsberättelsen har uppdaterats.", "success")
+    return redirect(url_for("report", file_id=file_id))
 
 
 @app.route("/report/<file_id>/pdf")
@@ -128,7 +159,7 @@ def report_pdf(file_id: str):
     framework = request.args.get("framework", "K2")
     income_stmt = generate_income_statement(sie, framework=framework)
     balance = generate_balance_sheet(sie, framework=framework)
-    mgmt_report = generate_management_report(sie)
+    mgmt_report = _get_mgmt_report(sie, file_id)
     notes = generate_notes(sie, framework=framework)
 
     html = render_template(
