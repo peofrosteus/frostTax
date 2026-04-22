@@ -4,7 +4,7 @@
 {% block content %}
 <div class="report-header">
     <div class="report-actions">
-        <a href="{{ url_for('download_sru', file_id=file_id) }}" class="btn btn-primary">Ladda ner SRU-fil</a>
+        <a href="{{ url_for('download_sru', file_id=file_id) }}" class="btn btn-primary">Ladda ner SRU-filer (zip)</a>
         <a href="{{ url_for('report', file_id=file_id) }}" class="btn btn-secondary">Tillbaka till årsredovisning</a>
     </div>
 </div>
@@ -20,7 +20,7 @@
     <p class="info-text">
         Nedan visas hela deklarationsunderlaget: skatteberäkning (INK2 sid 1),
         räkenskapsschema (INK2R) och skattemässiga justeringar (INK2S).
-        Ladda ner SRU-filen ovan för digital inlämning till Skatteverket.
+        Ladda ner zip-filen ovan (innehåller INFO.SRU och BLANKETTER.SRU) för digital inlämning via Skatteverkets filöverföringstjänst.
     </p>
 
     {# ══════ INK2 Sid 1: Skatteberäkning ══════ #}

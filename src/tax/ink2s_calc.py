@@ -15,7 +15,9 @@ from src.financial.income_statement import generate_income_statement
 
 # Statslåneränta – used for schablonintäkt on periodiseringsfonder
 # November 30, 2024 value (for fiscal year 2025 declarations)
-STATSLANERANTA = Decimal("0.021")
+# SKV 294: "Statslåneräntan ska alltid vara lägst 0,5 procent vid denna beräkning."
+_RAW_STATSLANERANTA = Decimal("0.021")
+STATSLANERANTA = max(_RAW_STATSLANERANTA, Decimal("0.005"))
 
 
 @dataclass

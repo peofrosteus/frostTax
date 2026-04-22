@@ -65,7 +65,7 @@ def test_all_fields_present():
         "1.1", "1.2", "1.3", "1.4", "1.5",
         "1.6a", "1.6b", "1.7a", "1.7b",
         "1.8", "1.9", "1.10", "1.11", "1.12",
-        "1.13", "1.14", "1.15", "1.16", "1.17",
+        "1.13", "1.14", "1.15", "1.16",
     ]
     for fid in expected:
         assert fid in field_ids, f"Field {fid} missing"

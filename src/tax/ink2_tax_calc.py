@@ -70,7 +70,6 @@ INK2_PAGE1_SRU: dict[str, str] = {
     "1.14": "97",     # Fastighetsskatt vattenkraftverk
     "1.15": "98",     # Fastighetsskatt vindkraftverk
     "1.16": "1582",   # Förnybar el (kilowattimmar)
-    "1.17": "1586",   # Inventarieköp under 2021
 }
 
 
@@ -97,8 +96,9 @@ def calculate_ink2_tax(sie: SieFile) -> Ink2TaxCalculation:
                    Decimal(0), editable=True))
 
     # ── Underlag för särskild löneskatt ──
-    # SLP = 24.26 % on pensionskostnader
-    SLP_RATE = Decimal("0.2426")
+    # Field 1.4 contains the UNDERLAG (pension costs), not the tax.
+    # Skatteverket calculates SLP (24.26%) from the underlag.
+    # SKV 294: "Observera att det är underlaget, inte skatten, som ska redovisas."
     pensionskostnader = Decimal(0)
     for acct_num in sie.accounts:
         try:
@@ -107,12 +107,9 @@ def calculate_ink2_tax(sie: SieFile) -> Ink2TaxCalculation:
             continue
         if 7410 <= n <= 7499:
             pensionskostnader += abs(sie.get_result(acct_num, 0))
-    slp_underlag = (pensionskostnader * SLP_RATE).quantize(
-        Decimal("1"), rounding=ROUND_HALF_UP
-    ) if pensionskostnader else Decimal(0)
 
     _add(TaxField("1.4", "Underlag för särskild löneskatt på pensionskostnader",
-                   slp_underlag, editable=True))
+                   pensionskostnader, editable=True))
     _add(TaxField("1.5", "Negativt underlag för särskild löneskatt på pensionskostnader",
                    Decimal(0), editable=True))
 
@@ -148,10 +145,6 @@ def calculate_ink2_tax(sie: SieFile) -> Ink2TaxCalculation:
 
     # ── Underlag för skattereduktion ──
     _add(TaxField("1.16", "Förnybar el (kilowattimmar)",
-                   Decimal(0), editable=True))
-
-    # ── Övriga upplysningar ──
-    _add(TaxField("1.17", "Inventarieköp under 2021",
                    Decimal(0), editable=True))
 
     return calc

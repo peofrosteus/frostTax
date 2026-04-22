@@ -1,16 +1,16 @@
 """SRU file generator for Skatteverket digital filing.
 
-Generates SRU files compatible with Skatteverket's file transfer service
-for INK2 (Inkomstdeklaration 2 - aktiebolag).
+Generates two SRU files compatible with Skatteverket's filöverföringstjänst
+for INK2 (Inkomstdeklaration 2 - aktiebolag):
+- INFO.SRU: DATABESKRIVNING + MEDIELEV (company information)
+- BLANKETTER.SRU: Three blanketter (INK2, INK2R, INK2S)
 
-The file contains three blanketter:
-- INK2: Huvudblankett (page 1) – skatteberäkning
-- INK2R: Räkenskapsschema – balansräkning + resultaträkning
-- INK2S: Skattemässiga justeringar
+Both files are required for submission to Skatteverket.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from io import StringIO
@@ -21,11 +21,15 @@ from src.tax.ink2_tax_calc import calculate_ink2_tax, INK2_PAGE1_SRU
 from src.tax.ink2s_calc import calculate_ink2s, INK2S_SRU
 
 
-def generate_sru_file(sie: SieFile) -> str:
-    """Generate an SRU file for INK2 declaration."""
-    buf = StringIO()
-    fields = aggregate_sru(sie)
+@dataclass
+class SruFiles:
+    """The two SRU files required for Skatteverket submission."""
+    info_sru: str       # Content of INFO.SRU
+    blanketter_sru: str  # Content of BLANKETTER.SRU
 
+
+def generate_sru_files(sie: SieFile) -> SruFiles:
+    """Generate both INFO.SRU and BLANKETTER.SRU for INK2 declaration."""
     org_nr = sie.company.org_number.replace("-", "")
     org_nr_16 = "16" + org_nr  # 16-prefix for juridisk person
     company_name = sie.company.name
@@ -45,25 +49,26 @@ def generate_sru_file(sie: SieFile) -> str:
     # Parse postal info from SIE address
     postnr, postort = _parse_postal(sie.company.address_postal)
 
-    # --- File header (DATABESKRIVNING) ---
-    buf.write("#DATABESKRIVNING_START\n")
-    buf.write("#PRODUKT SRU\n")
-    buf.write(f"#SKAPAD {today} {timestamp}\n")
-    buf.write("#PROGRAM frostTax\n")
-    buf.write("#FILNAMN BLANKETTER.SRU\n")
-    buf.write("#DATABESKRIVNING_SLUT\n")
-
-    # --- MEDIELEV (org info) ---
-    buf.write("#MEDIELEV_START\n")
-    buf.write(f"#ORGNR {org_nr_16}\n")
-    buf.write(f"#NAMN {company_name}\n")
+    # ── INFO.SRU ──
+    info = StringIO()
+    info.write("#DATABESKRIVNING_START\n")
+    info.write("#PRODUKT SRU\n")
+    info.write(f"#SKAPAD {today} {timestamp}\n")
+    info.write("#PROGRAM frostTax\n")
+    info.write("#FILNAMN BLANKETTER.SRU\n")
+    info.write("#DATABESKRIVNING_SLUT\n")
+    info.write("#MEDIELEV_START\n")
+    info.write(f"#ORGNR {org_nr_16}\n")
+    info.write(f"#NAMN {company_name}\n")
     if postnr:
-        buf.write(f"#POSTNR {postnr}\n")
+        info.write(f"#POSTNR {postnr}\n")
     if postort:
-        buf.write(f"#POSTORT {postort}\n")
-    buf.write("#MEDIELEV_SLUT\n")
+        info.write(f"#POSTORT {postort}\n")
+    info.write("#MEDIELEV_SLUT\n")
 
-    # --- Blankett 1: INK2 (page 1 – skatteberäkning) ---
+    # ── BLANKETTER.SRU ──
+    buf = StringIO()
+    fields = aggregate_sru(sie)
     _write_blankett_header(buf, f"INK2-{blankett_suffix}", org_nr_16, today, timestamp,
                            company_name, fiscal_start, fiscal_end)
     tax_calc = calculate_ink2_tax(sie)
@@ -91,10 +96,29 @@ def generate_sru_file(sie: SieFile) -> str:
         if sf.field_id in INK2S_SRU and sf.amount != 0:
             sru_code = INK2S_SRU[sf.field_id]
             buf.write(f"#UPPGIFT {sru_code} {round(sf.amount)}\n")
+    # Upplysningar om årsredovisningen (checkboxes)
+    # 8041: Uppdragstagare har biträtt vid upprättandet av årsredovisningen
+    # 8045: Årsredovisningen har varit föremål för revision
+    # Default: Ja for both (typical for small AB using redovisningskonsult)
+    buf.write("#UPPGIFT 8041 X\n")
+    buf.write("#UPPGIFT 8045 X\n")
     buf.write("#BLANKETTSLUT\n")
 
     buf.write("#FIL_SLUT\n")
-    return buf.getvalue()
+
+    return SruFiles(
+        info_sru=info.getvalue(),
+        blanketter_sru=buf.getvalue(),
+    )
+
+
+def generate_sru_file(sie: SieFile) -> str:
+    """Generate combined SRU content (legacy, for tests/display).
+
+    For actual Skatteverket submission, use generate_sru_files() instead.
+    """
+    files = generate_sru_files(sie)
+    return files.info_sru + files.blanketter_sru
 
 
 def _write_blankett_header(

@@ -23,7 +23,7 @@ from src.financial.balance_sheet import generate_balance_sheet
 from src.financial.management_report import generate_management_report
 from src.financial.notes import generate_notes
 from src.tax.sru_mapping import aggregate_sru
-from src.tax.sru_generator import generate_sru_file
+from src.tax.sru_generator import generate_sru_file, generate_sru_files
 from src.tax.ink2_tax_calc import calculate_ink2_tax
 from src.tax.ink2s_calc import calculate_ink2s
 
@@ -188,16 +188,23 @@ def download_sru(file_id: str):
         flash("Filen har gått ut. Ladda upp igen.", "error")
         return redirect(url_for("index"))
 
-    sru_content = generate_sru_file(sie)
+    sru_files = generate_sru_files(sie)
+
+    # Skatteverket requires two separate files: INFO.SRU and BLANKETTER.SRU
+    # We package them in a zip for download.
+    import zipfile
     from io import BytesIO
-    sru_io = BytesIO(sru_content.encode("iso-8859-1", errors="replace"))
-    sru_io.seek(0)
+    zip_io = BytesIO()
+    with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("INFO.SRU", sru_files.info_sru.encode("iso-8859-1", errors="replace"))
+        zf.writestr("BLANKETTER.SRU", sru_files.blanketter_sru.encode("iso-8859-1", errors="replace"))
+    zip_io.seek(0)
     org_nr = sie.company.org_number.replace("-", "")
     return send_file(
-        sru_io,
-        mimetype="text/plain",
+        zip_io,
+        mimetype="application/zip",
         as_attachment=True,
-        download_name=f"INK2_{org_nr}.sru",
+        download_name=f"SRU_{org_nr}.zip",
     )
 
 
