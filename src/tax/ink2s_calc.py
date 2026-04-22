@@ -238,7 +238,21 @@ def calculate_ink2s(sie: SieFile) -> Ink2sCalculation:
     _add(Ink2sField("4.13", "Andra skattemässiga justeringar", Decimal(0), "+/−", editable=True))
 
     # ── 4.14: Underskott ──
-    _add(Ink2sField("4.14a", "Outnyttjat underskott från föregående år", Decimal(0), "-", editable=True))
+    # Try to determine previous year's underskott by running INK2S for year -1
+    outnyttjat_underskott = Decimal(0)
+    if sie.has_previous_year:
+        prev_income = generate_income_statement(sie, year_offset=-1)
+        prev_resultat = prev_income.annual_result
+        # Simple estimation: if previous year had a loss after tax adjustments,
+        # it becomes this year's outnyttjat underskott.
+        # A full implementation would re-run INK2S for -1, but the SIE file
+        # typically only has one year of detailed tax data.
+        # For now, use account 2098 (Vinst/förlust föregående år) if negative.
+        balanserad = sie.get_ub("2098", 0) + sie.get_ub("2091", 0)
+        if balanserad < 0:
+            outnyttjat_underskott = abs(balanserad)
+    _add(Ink2sField("4.14a", "Outnyttjat underskott från föregående år",
+                     outnyttjat_underskott, "-", editable=True))
     _add(Ink2sField("4.14b", "Reduktion av underskott (beloppsspärr, ackord m.m.)", Decimal(0), "+", editable=True))
     _add(Ink2sField("4.14c", "Reduktion av underskott (koncernbidragsspärr m.m.)", Decimal(0), "+", editable=True))
 

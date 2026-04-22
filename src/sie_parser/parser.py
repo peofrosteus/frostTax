@@ -99,6 +99,9 @@ def _parse_label(line: str, sie: SieFile) -> None:
         if offset == 0:
             sie.company.fiscal_year_start = start
             sie.company.fiscal_year_end = end
+        elif offset == -1:
+            sie.company.prev_fiscal_year_start = start
+            sie.company.prev_fiscal_year_end = end
     elif label == "#ORGNR":
         sie.company.org_number = _str(tokens, 1)
     elif label == "#OMFATTN":

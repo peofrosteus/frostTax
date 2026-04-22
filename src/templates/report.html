@@ -115,6 +115,9 @@
             {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
             else 'Aktuellt år' }}
           </th>
+          {% if sie.has_previous_year %}
+          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -127,6 +130,13 @@
             {% if not line.is_sum or line.amount != 0 %} {{
             "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
           </td>
+          {% if sie.has_previous_year %}
+          <td class="amount">
+            {% if not line.is_sum or line.previous_amount != 0 %} {{
+            "{:,.0f}".format(line.previous_amount).replace(",", " ") }} {% endif
+            %}
+          </td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
@@ -146,6 +156,9 @@
             {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
             else 'Aktuellt år' }}
           </th>
+          {% if sie.has_previous_year %}
+          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -158,6 +171,13 @@
             {% if not line.is_sum or line.amount != 0 %} {{
             "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
           </td>
+          {% if sie.has_previous_year %}
+          <td class="amount">
+            {% if not line.is_sum or line.previous_amount != 0 %} {{
+            "{:,.0f}".format(line.previous_amount).replace(",", " ") }} {% endif
+            %}
+          </td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
@@ -172,6 +192,9 @@
             {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
             else 'Aktuellt år' }}
           </th>
+          {% if sie.has_previous_year %}
+          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -184,6 +207,13 @@
             {% if not line.is_sum or line.amount != 0 %} {{
             "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
           </td>
+          {% if sie.has_previous_year %}
+          <td class="amount">
+            {% if not line.is_sum or line.previous_amount != 0 %} {{
+            "{:,.0f}".format(line.previous_amount).replace(",", " ") }} {% endif
+            %}
+          </td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>

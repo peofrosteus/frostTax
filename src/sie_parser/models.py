@@ -18,6 +18,8 @@ class Company:
     address_phone: str = ""
     fiscal_year_start: Optional[date] = None
     fiscal_year_end: Optional[date] = None
+    prev_fiscal_year_start: Optional[date] = None
+    prev_fiscal_year_end: Optional[date] = None
 
 
 @dataclass
@@ -168,3 +170,8 @@ class SieFile:
         for acct in self.accounts_in_range(start, end):
             total += self.get_result(acct.number, year_offset)
         return total
+
+    @property
+    def has_previous_year(self) -> bool:
+        """Check if there is data for the previous fiscal year."""
+        return self.company.prev_fiscal_year_end is not None

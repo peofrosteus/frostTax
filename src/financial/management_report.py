@@ -67,7 +67,21 @@ def generate_management_report(
 
     report.annual_result = income_stmt.annual_result
 
-    # Build multi-year overview (current year)
+    # Build multi-year overview
+    # Previous year (if data exists)
+    if sie.has_previous_year:
+        prev_income = generate_income_statement(sie, year_offset=-1)
+        prev_balance = generate_balance_sheet(sie, year_offset=-1)
+        prev_label = str(sie.company.prev_fiscal_year_end.year)
+        report.multi_year_overview.append(MultiYearOverview(
+            year=prev_label,
+            net_revenue=prev_income.net_revenue,
+            operating_result=prev_income.operating_result,
+            annual_result=prev_income.annual_result,
+            total_assets=prev_balance.total_assets,
+        ))
+
+    # Current year
     if sie.company.fiscal_year_end:
         year_label = str(sie.company.fiscal_year_end.year)
     else:
