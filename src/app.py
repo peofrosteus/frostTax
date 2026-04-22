@@ -20,8 +20,10 @@ from src.sie_parser.parser import parse_sie_bytes, parse_sie_file
 from src.sie_parser.models import SieFile
 from src.financial.income_statement import generate_income_statement
 from src.financial.balance_sheet import generate_balance_sheet
-from src.financial.management_report import generate_management_report
+from src.financial.management_report import generate_management_report, ManagementReport
 from src.financial.notes import generate_notes
+from src.financial.cash_flow import generate_cash_flow
+from src.financial.equity_changes import generate_equity_changes
 from src.tax.sru_mapping import aggregate_sru
 from src.tax.sru_generator import generate_sru_file, generate_sru_files
 from src.tax.ink2_tax_calc import calculate_ink2_tax
@@ -93,7 +95,7 @@ def load_local(filename: str):
         return redirect(url_for("index"))
 
 
-def _get_mgmt_report(sie: SieFile, file_id: str) -> "ManagementReport":
+def _get_mgmt_report(sie: SieFile, file_id: str) -> ManagementReport:
     """Generate management report with any user edits applied."""
     edits = _mgmt_edits.get(file_id, {})
     return generate_management_report(
@@ -118,6 +120,10 @@ def report(file_id: str):
     mgmt_report = _get_mgmt_report(sie, file_id)
     notes = generate_notes(sie, framework=framework)
 
+    # K3 requires additional reports
+    cash_flow = generate_cash_flow(sie) if framework == "K3" else None
+    equity_chg = generate_equity_changes(sie) if framework == "K3" else None
+
     return render_template(
         "report.html",
         sie=sie,
@@ -125,6 +131,8 @@ def report(file_id: str):
         balance=balance,
         mgmt_report=mgmt_report,
         notes=notes,
+        cash_flow=cash_flow,
+        equity_changes=equity_chg,
         framework=framework,
         file_id=file_id,
         filename=_file_names.get(file_id, ""),
@@ -162,6 +170,9 @@ def report_pdf(file_id: str):
     mgmt_report = _get_mgmt_report(sie, file_id)
     notes = generate_notes(sie, framework=framework)
 
+    cash_flow = generate_cash_flow(sie) if framework == "K3" else None
+    equity_chg = generate_equity_changes(sie) if framework == "K3" else None
+
     html = render_template(
         "report_print.html",
         sie=sie,
@@ -169,6 +180,8 @@ def report_pdf(file_id: str):
         balance=balance,
         mgmt_report=mgmt_report,
         notes=notes,
+        cash_flow=cash_flow,
+        equity_changes=equity_chg,
         framework=framework,
     )
 

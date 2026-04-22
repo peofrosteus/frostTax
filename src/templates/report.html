@@ -342,6 +342,89 @@
     </table>
   </section>
 
+  {% if equity_changes %}
+  <!-- Förändringar i eget kapital (K3) -->
+  <section class="report-section" id="equity-changes">
+    <h2>Förändringar i eget kapital</h2>
+    <table class="data-table financial-table">
+      <thead>
+        <tr>
+          <th></th>
+          {% for col in equity_changes.columns %}
+          <th class="amount">{{ col.label }}</th>
+          {% endfor %}
+          <th class="amount">Totalt</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Belopp vid årets ingång</td>
+          {% for col in equity_changes.columns %}
+          <td class="amount">{{ "{:,.0f}".format(col.opening).replace(",", " ") }}</td>
+          {% endfor %}
+          <td class="amount">{{ "{:,.0f}".format(equity_changes.total_opening).replace(",", " ") }}</td>
+        </tr>
+        <tr>
+          <td>Disposition enligt beslut av årsstämma</td>
+          {% for col in equity_changes.columns %}
+          <td class="amount">{% if col.appropriation %}{{ "{:,.0f}".format(col.appropriation).replace(",", " ") }}{% endif %}</td>
+          {% endfor %}
+          <td class="amount">0</td>
+        </tr>
+        <tr>
+          <td>Årets resultat</td>
+          {% for col in equity_changes.columns %}
+          <td class="amount">{% if col.annual_result %}{{ "{:,.0f}".format(col.annual_result).replace(",", " ") }}{% endif %}</td>
+          {% endfor %}
+          <td class="amount">{{ "{:,.0f}".format(equity_changes.total_annual_result).replace(",", " ") }}</td>
+        </tr>
+        <tr class="sum-row">
+          <td>Belopp vid årets utgång</td>
+          {% for col in equity_changes.columns %}
+          <td class="amount">{{ "{:,.0f}".format(col.closing).replace(",", " ") }}</td>
+          {% endfor %}
+          <td class="amount">{{ "{:,.0f}".format(equity_changes.total_closing).replace(",", " ") }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if cash_flow %}
+  <!-- Kassaflödesanalys (K3) -->
+  <section class="report-section" id="cash-flow">
+    <h2>Kassaflödesanalys</h2>
+    <table class="data-table financial-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="amount">
+            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end else 'Aktuellt år' }}
+          </th>
+          {% if sie.has_previous_year %}
+          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in cash_flow.lines %}
+        <tr class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}">
+          <td>{{ line.label }}</td>
+          <td class="amount">
+            {% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+          </td>
+          {% if sie.has_previous_year %}
+          <td class="amount">
+            {% if not line.is_sum or line.previous_amount != 0 %}{{ "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
   <!-- Noter -->
   <section class="report-section" id="notes">
     <h2>Noter</h2>

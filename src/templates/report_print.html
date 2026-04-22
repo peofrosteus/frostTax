@@ -239,6 +239,65 @@
       {% endfor %}
     </table>
 
+    {% if equity_changes %}
+    <h2>Förändringar i eget kapital</h2>
+    <table>
+      <tr>
+        <th>&#160;</th>
+        {% for col in equity_changes.columns %}
+        <th class="amount">{{ col.label }}</th>
+        {% endfor %}
+        <th class="amount">Totalt</th>
+      </tr>
+      <tr>
+        <td>Belopp vid årets ingång</td>
+        {% for col in equity_changes.columns %}
+        <td class="amount">{{ "{:,.0f}".format(col.opening).replace(",", "\u00a0") }}</td>
+        {% endfor %}
+        <td class="amount">{{ "{:,.0f}".format(equity_changes.total_opening).replace(",", "\u00a0") }}</td>
+      </tr>
+      <tr>
+        <td>Disposition enl. årsstämma</td>
+        {% for col in equity_changes.columns %}
+        <td class="amount">{% if col.appropriation %}{{ "{:,.0f}".format(col.appropriation).replace(",", "\u00a0") }}{% endif %}</td>
+        {% endfor %}
+        <td class="amount">0</td>
+      </tr>
+      <tr>
+        <td>Årets resultat</td>
+        {% for col in equity_changes.columns %}
+        <td class="amount">{% if col.annual_result %}{{ "{:,.0f}".format(col.annual_result).replace(",", "\u00a0") }}{% endif %}</td>
+        {% endfor %}
+        <td class="amount">{{ "{:,.0f}".format(equity_changes.total_annual_result).replace(",", "\u00a0") }}</td>
+      </tr>
+      <tr class="sum-row">
+        <td>Belopp vid årets utgång</td>
+        {% for col in equity_changes.columns %}
+        <td class="amount">{{ "{:,.0f}".format(col.closing).replace(",", "\u00a0") }}</td>
+        {% endfor %}
+        <td class="amount">{{ "{:,.0f}".format(equity_changes.total_closing).replace(",", "\u00a0") }}</td>
+      </tr>
+    </table>
+    {% endif %}
+
+    {% if cash_flow %}
+    <h2>Kassaflödesanalys</h2>
+    <table>
+      <tr>
+        <th>&#160;</th>
+        <th class="amount">{{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end else '' }}</th>
+        {% if sie.has_previous_year %}<th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>{% endif %}
+      </tr>
+      {% for line in cash_flow.lines %}
+      <tr{% if line.is_sum %} class="sum-row"{% endif %}>
+        <td{% if line.indent == 1 %} class="indent-1"{% elif line.indent == 2 %} class="indent-2"{% endif %}>{{ line.label }}</td>
+        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", "\u00a0") }}{% endif %}</td>
+        {% if sie.has_previous_year %}<td class="amount">{% if not line.is_sum or line.previous_amount != 0 %}{{ "{:,.0f}".format(line.previous_amount).replace(",", "\u00a0") }}{% endif %}</td>{% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
     <h2>Noter</h2>
     {% for note in notes.items %}
     <div class="note">
