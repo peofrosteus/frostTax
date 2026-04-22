@@ -172,22 +172,25 @@
     {% if mgmt_report.profit_disposition_text %}
     <p>{{ mgmt_report.profit_disposition_text }}</p>
     {% else %}
-    <p>Styrelsen föreslår att till förfogande stående medel (kr):</p>
+    <p>Styrelsen föreslår att till förfogande stående medel:</p>
     <table>
       <tr>
         <td>Balanserat resultat</td>
-        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",", "\u00a0") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",", "\u00a0") }} kr</td>
       </tr>
       <tr>
         <td>Årets resultat</td>
-        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",", "\u00a0") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",", "\u00a0") }} kr</td>
       </tr>
       <tr class="sum-row">
         <td>Summa</td>
-        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",", "\u00a0") }}</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",", "\u00a0") }} kr</td>
+      </tr>
+      <tr>
+        <td>I ny räkning överförs</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",", "\u00a0") }} kr</td>
       </tr>
     </table>
-    <p>disponeras så att i ny räkning överförs {{ "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",", "\u00a0") }} kr.</p>
     {% endif %}
 
     <h2>Resultaträkning</h2>
