@@ -36,7 +36,7 @@ class BalanceSheet:
 
     @property
     def is_balanced(self) -> bool:
-        return self.total_assets == -self.total_equity_and_liabilities
+        return self.total_assets == self.total_equity_and_liabilities
 
     def _find(self, items: list[LineItem], label: str) -> Decimal:
         for li in items:
@@ -176,20 +176,31 @@ def generate_balance_sheet(
     sum_bundet_prev = bundet_eget_kapital_aktiekapital_prev + uppskrivningsfond_prev + reservfond_prev
 
     # Fritt eget kapital
-    balanserat_resultat = -_ub(2091, 2091) + (-_ub(2098, 2098))
-    balanserat_resultat_prev = -_prev(2091, 2091) + (-_prev(2098, 2098))
+    # Always compute årets resultat from income statement (RES entries).
+    # UB 2099 may contain the current year's closed result (= income stmt)
+    # or a previous year's untransferred result. We detect which case
+    # by comparing to the income statement. If they differ, 2099 holds
+    # an untransferred amount that belongs in balanserat resultat.
+    from src.financial.income_statement import generate_income_statement
+    income_stmt = generate_income_statement(sie, year_offset)
+    arets_resultat = income_stmt.annual_result
+
+    prev_income = generate_income_statement(sie, year_offset - 1)
+    arets_resultat_prev = prev_income.annual_result
+
+    ub_2099 = -_ub(2099, 2099)
+    ub_2099_prev = -_prev(2099, 2099)
+
+    # If 2099 ≈ income stmt result → year-end closing done, don't double-count.
+    # Otherwise 2099 holds untransferred prior result → include in balanserat.
+    extra_2099 = ub_2099 if abs(ub_2099 - arets_resultat) > Decimal("1") else Decimal(0)
+    extra_2099_prev = ub_2099_prev if abs(ub_2099_prev - arets_resultat_prev) > Decimal("1") else Decimal(0)
+
+    balanserat_resultat = -_ub(2091, 2091) + (-_ub(2098, 2098)) + extra_2099
+    balanserat_resultat_prev = -_prev(2091, 2091) + (-_prev(2098, 2098)) + extra_2099_prev
 
     fritt_eget_kapital_ovrigt = -_ub(2090, 2090)
     fritt_eget_kapital_ovrigt_prev = -_prev(2090, 2090)
-
-    arets_resultat = -_ub(2099, 2099)
-    arets_resultat_prev = -_prev(2099, 2099)
-
-    # If årets resultat is not booked on 2099, calculate from income statement
-    if arets_resultat == 0:
-        from src.financial.income_statement import generate_income_statement
-        income_stmt = generate_income_statement(sie, year_offset)
-        arets_resultat = income_stmt.annual_result
 
     sum_fritt = balanserat_resultat + fritt_eget_kapital_ovrigt + arets_resultat
     sum_fritt_prev = balanserat_resultat_prev + fritt_eget_kapital_ovrigt_prev + arets_resultat_prev
