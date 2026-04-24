@@ -41,6 +41,7 @@ _parsed_files: dict[str, SieFile] = {}
 _file_names: dict[str, str] = {}
 _mgmt_edits: dict[str, dict[str, str]] = {}  # file_id -> management report overrides
 _signature_edits: dict[str, list[dict[str, str]]] = {}  # file_id -> [{name, role}]
+_notes_edits: dict[str, dict[int, str]] = {}  # file_id -> {note_number: content}
 
 UPLOAD_DIR = Path(__file__).parent.parent / "sieFiles"
 
@@ -109,6 +110,7 @@ def _get_mgmt_report(sie: SieFile, file_id: str) -> ManagementReport:
     edits = _mgmt_edits.get(file_id, {})
     return generate_management_report(
         sie,
+        company_location=edits.get("company_location", ""),
         business_description=edits.get("business_description", ""),
         significant_events=edits.get("significant_events", ""),
         expected_future_development=edits.get("expected_future_development", ""),
@@ -128,6 +130,12 @@ def report(file_id: str):
     balance = generate_balance_sheet(sie, framework=framework)
     mgmt_report = _get_mgmt_report(sie, file_id)
     notes = generate_notes(sie, framework=framework)
+
+    # Apply user overrides to note content
+    note_edits = _notes_edits.get(file_id, {})
+    for note in notes.items:
+        if note.number in note_edits:
+            note.content = note_edits[note.number]
 
     # K3 requires additional reports
     cash_flow = generate_cash_flow(sie) if framework == "K3" else None
@@ -158,6 +166,7 @@ def edit_mgmt_report(file_id: str):
         return redirect(url_for("index"))
 
     _mgmt_edits[file_id] = {
+        "company_location": request.form.get("company_location", "").strip(),
         "business_description": request.form.get("business_description", "").strip(),
         "significant_events": request.form.get("significant_events", "").strip(),
         "expected_future_development": request.form.get("expected_future_development", "").strip(),
@@ -187,6 +196,24 @@ def edit_signatures(file_id: str):
     return redirect(url_for("report", file_id=file_id))
 
 
+@app.route("/report/<file_id>/edit-note/<int:note_number>", methods=["POST"])
+def edit_note(file_id: str, note_number: int):
+    """Save a note content override."""
+    if file_id not in _parsed_files:
+        flash("Filen har gått ut. Ladda upp igen.", "error")
+        return redirect(url_for("index"))
+
+    content = request.form.get("note_content", "").strip()
+    if file_id not in _notes_edits:
+        _notes_edits[file_id] = {}
+    if content:
+        _notes_edits[file_id][note_number] = content
+    else:
+        _notes_edits[file_id].pop(note_number, None)
+    flash(f"Not {note_number} har uppdaterats.", "success")
+    return redirect(url_for("report", file_id=file_id))
+
+
 @app.route("/report/<file_id>/pdf")
 def report_pdf(file_id: str):
     sie = _parsed_files.get(file_id)
@@ -199,6 +226,11 @@ def report_pdf(file_id: str):
     balance = generate_balance_sheet(sie, framework=framework)
     mgmt_report = _get_mgmt_report(sie, file_id)
     notes = generate_notes(sie, framework=framework)
+
+    note_edits = _notes_edits.get(file_id, {})
+    for note in notes.items:
+        if note.number in note_edits:
+            note.content = note_edits[note.number]
 
     cash_flow = generate_cash_flow(sie) if framework == "K3" else None
     equity_chg = generate_equity_changes(sie) if framework == "K3" else None

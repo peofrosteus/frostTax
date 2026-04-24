@@ -50,6 +50,7 @@ class ManagementReport:
 
 def generate_management_report(
     sie: SieFile,
+    company_location: str = "",
     business_description: str = "",
     significant_events: str = "",
     expected_future_development: str = "",
@@ -72,8 +73,8 @@ def generate_management_report(
     report.significant_events = significant_events
     report.expected_future_development = expected_future_development
 
-    # Bolagets säte – extract city from postal address (e.g. "17263 Sundbyberg")
-    report.company_location = _extract_city(sie.company.address_postal)
+    # Bolagets säte – user override or extracted from postal address
+    report.company_location = company_location or _extract_city(sie.company.address_postal)
 
     # Income statement for current year
     income_stmt = generate_income_statement(sie, year_offset=0)

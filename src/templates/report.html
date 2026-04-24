@@ -62,6 +62,17 @@
         action="{{ url_for('edit_mgmt_report', file_id=file_id) }}"
       >
         <div class="form-group">
+          <label for="company_location"><strong>Bolagets säte</strong></label>
+          <input
+            type="text"
+            name="company_location"
+            id="company_location"
+            value="{{ mgmt_report.company_location }}"
+            placeholder="t.ex. Stockholm"
+            class="form-control"
+          />
+        </div>
+        <div class="form-group">
           <label for="business_description"
             ><strong>Verksamheten</strong></label
           >
@@ -102,7 +113,9 @@
         </div>
         <div class="form-group">
           <label for="profit_disposition_text"
-            ><strong>Resultatdisposition (fritext, lämna tomt för automatisk)</strong></label
+            ><strong
+              >Resultatdisposition (fritext, lämna tomt för automatisk)</strong
+            ></label
           >
           <textarea
             name="profit_disposition_text"
@@ -130,7 +143,7 @@
       {% if mgmt_report.company_location %}
       <p>Bolaget har sitt säte i {{ mgmt_report.company_location }}.</p>
       {% endif %}
-      <p>{{ mgmt_report.business_description }}</p></p>
+      <p>{{ mgmt_report.business_description }}</p>
 
       {% if mgmt_report.significant_events %}
       <h3>Väsentliga händelser under räkenskapsåret</h3>
@@ -163,7 +176,8 @@
             <td>Resultat efter finansiella poster (kr)</td>
             {% for year in mgmt_report.multi_year_overview %}
             <td class="amount">
-              {{ "{:,.0f}".format(year.result_after_financial).replace(",", " ") }}
+              {{ "{:,.0f}".format(year.result_after_financial).replace(",", " ")
+              }}
             </td>
             {% endfor %}
           </tr>
@@ -195,19 +209,35 @@
         <tbody>
           <tr>
             <td>Balanserat resultat</td>
-            <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",", " ") }} kr</td>
+            <td class="amount">
+              {{
+              "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",",
+              " ") }} kr
+            </td>
           </tr>
           <tr>
             <td>Årets resultat</td>
-            <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",", " ") }} kr</td>
+            <td class="amount">
+              {{
+              "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",",
+              " ") }} kr
+            </td>
           </tr>
           <tr class="sum-row">
             <td>Summa</td>
-            <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",", " ") }} kr</td>
+            <td class="amount">
+              {{
+              "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",",
+              " ") }} kr
+            </td>
           </tr>
           <tr>
             <td>I ny räkning överförs</td>
-            <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",", " ") }} kr</td>
+            <td class="amount">
+              {{
+              "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",",
+              " ") }} kr
+            </td>
           </tr>
         </tbody>
       </table>
@@ -363,37 +393,54 @@
         <tr>
           <td>Belopp vid årets ingång</td>
           {% for col in equity_changes.columns %}
-          <td class="amount">{{ "{:,.0f}".format(col.opening).replace(",", " ") }}</td>
+          <td class="amount">
+            {{ "{:,.0f}".format(col.opening).replace(",", " ") }}
+          </td>
           {% endfor %}
-          <td class="amount">{{ "{:,.0f}".format(equity_changes.total_opening).replace(",", " ") }}</td>
+          <td class="amount">
+            {{ "{:,.0f}".format(equity_changes.total_opening).replace(",", " ")
+            }}
+          </td>
         </tr>
         <tr>
           <td>Disposition enligt beslut av årsstämma</td>
           {% for col in equity_changes.columns %}
-          <td class="amount">{% if col.appropriation %}{{ "{:,.0f}".format(col.appropriation).replace(",", " ") }}{% endif %}</td>
+          <td class="amount">
+            {% if col.appropriation %}{{
+            "{:,.0f}".format(col.appropriation).replace(",", " ") }}{% endif %}
+          </td>
           {% endfor %}
           <td class="amount">0</td>
         </tr>
         <tr>
           <td>Årets resultat</td>
           {% for col in equity_changes.columns %}
-          <td class="amount">{% if col.annual_result %}{{ "{:,.0f}".format(col.annual_result).replace(",", " ") }}{% endif %}</td>
+          <td class="amount">
+            {% if col.annual_result %}{{
+            "{:,.0f}".format(col.annual_result).replace(",", " ") }}{% endif %}
+          </td>
           {% endfor %}
-          <td class="amount">{{ "{:,.0f}".format(equity_changes.total_annual_result).replace(",", " ") }}</td>
+          <td class="amount">
+            {{ "{:,.0f}".format(equity_changes.total_annual_result).replace(",",
+            " ") }}
+          </td>
         </tr>
         <tr class="sum-row">
           <td>Belopp vid årets utgång</td>
           {% for col in equity_changes.columns %}
-          <td class="amount">{{ "{:,.0f}".format(col.closing).replace(",", " ") }}</td>
+          <td class="amount">
+            {{ "{:,.0f}".format(col.closing).replace(",", " ") }}
+          </td>
           {% endfor %}
-          <td class="amount">{{ "{:,.0f}".format(equity_changes.total_closing).replace(",", " ") }}</td>
+          <td class="amount">
+            {{ "{:,.0f}".format(equity_changes.total_closing).replace(",", " ")
+            }}
+          </td>
         </tr>
       </tbody>
     </table>
   </section>
-  {% endif %}
-
-  {% if cash_flow %}
+  {% endif %} {% if cash_flow %}
   <!-- Kassaflödesanalys (K3) -->
   <section class="report-section" id="cash-flow">
     <h2>Kassaflödesanalys</h2>
@@ -402,7 +449,8 @@
         <tr>
           <th></th>
           <th class="amount">
-            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end else 'Aktuellt år' }}
+            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
+            else 'Aktuellt år' }}
           </th>
           {% if sie.has_previous_year %}
           <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
@@ -411,14 +459,19 @@
       </thead>
       <tbody>
         {% for line in cash_flow.lines %}
-        <tr class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}">
+        <tr
+          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+        >
           <td>{{ line.label }}</td>
           <td class="amount">
-            {% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+            {% if not line.is_sum or line.amount != 0 %}{{
+            "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
           </td>
           {% if sie.has_previous_year %}
           <td class="amount">
-            {% if not line.is_sum or line.previous_amount != 0 %}{{ "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{% endif %}
+            {% if not line.is_sum or line.previous_amount != 0 %}{{
+            "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{% endif
+            %}
           </td>
           {% endif %}
         </tr>
@@ -456,25 +509,65 @@
   <section class="report-section" id="signatures">
     <h2>
       Underskrifter
-      <button type="button" class="btn btn-outline btn-sm" onclick="toggleSigEdit()">Redigera</button>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm"
+        onclick="toggleSigEdit()"
+      >
+        Redigera
+      </button>
     </h2>
 
     <!-- Edit form (hidden by default) -->
     <div id="sig-edit-form" style="display: none">
-      <form method="post" action="{{ url_for('edit_signatures', file_id=file_id) }}">
+      <form
+        method="post"
+        action="{{ url_for('edit_signatures', file_id=file_id) }}"
+      >
         <div id="sig-rows">
           {% for sig in signatures %}
           <div class="sig-edit-row form-group">
-            <input type="text" name="sig_name" value="{{ sig.name }}" placeholder="Namn" class="form-control" style="display:inline-block;width:55%" />
-            <input type="text" name="sig_role" value="{{ sig.role }}" placeholder="Roll" class="form-control" style="display:inline-block;width:35%" />
-            <button type="button" class="btn btn-outline btn-sm" onclick="this.parentElement.remove()">✕</button>
+            <input
+              type="text"
+              name="sig_name"
+              value="{{ sig.name }}"
+              placeholder="Namn"
+              class="form-control"
+              style="display: inline-block; width: 55%"
+            />
+            <input
+              type="text"
+              name="sig_role"
+              value="{{ sig.role }}"
+              placeholder="Roll"
+              class="form-control"
+              style="display: inline-block; width: 35%"
+            />
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              onclick="this.parentElement.remove()"
+            >
+              ✕
+            </button>
           </div>
           {% endfor %}
         </div>
-        <button type="button" class="btn btn-outline btn-sm" onclick="addSigRow()" style="margin-bottom:12px">+ Lägg till person</button>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          onclick="addSigRow()"
+          style="margin-bottom: 12px"
+        >
+          + Lägg till person
+        </button>
         <br />
-        <button type="submit" class="btn btn-primary">Spara underskrifter</button>
-        <button type="button" class="btn btn-outline" onclick="toggleSigEdit()">Avbryt</button>
+        <button type="submit" class="btn btn-primary">
+          Spara underskrifter
+        </button>
+        <button type="button" class="btn btn-outline" onclick="toggleSigEdit()">
+          Avbryt
+        </button>
       </form>
     </div>
 
@@ -495,24 +588,25 @@
 </div>
 
 <script>
-function toggleSigEdit() {
-  var form = document.getElementById("sig-edit-form");
-  var display = document.getElementById("sig-display");
-  if (form.style.display === "none") {
-    form.style.display = "block";
-    display.style.display = "none";
-  } else {
-    form.style.display = "none";
-    display.style.display = "block";
+  function toggleSigEdit() {
+    var form = document.getElementById("sig-edit-form");
+    var display = document.getElementById("sig-display");
+    if (form.style.display === "none") {
+      form.style.display = "block";
+      display.style.display = "none";
+    } else {
+      form.style.display = "none";
+      display.style.display = "block";
+    }
   }
-}
-function addSigRow() {
-  var row = document.createElement("div");
-  row.className = "sig-edit-row form-group";
-  row.innerHTML = '<input type="text" name="sig_name" placeholder="Namn" class="form-control" style="display:inline-block;width:55%" />'
-    + ' <input type="text" name="sig_role" value="Styrelseledamot" placeholder="Roll" class="form-control" style="display:inline-block;width:35%" />'
-    + ' <button type="button" class="btn btn-outline btn-sm" onclick="this.parentElement.remove()">✕</button>';
-  document.getElementById("sig-rows").appendChild(row);
-}
+  function addSigRow() {
+    var row = document.createElement("div");
+    row.className = "sig-edit-row form-group";
+    row.innerHTML =
+      '<input type="text" name="sig_name" placeholder="Namn" class="form-control" style="display:inline-block;width:55%" />' +
+      ' <input type="text" name="sig_role" value="Styrelseledamot" placeholder="Roll" class="form-control" style="display:inline-block;width:35%" />' +
+      ' <button type="button" class="btn btn-outline btn-sm" onclick="this.parentElement.remove()">✕</button>';
+    document.getElementById("sig-rows").appendChild(row);
+  }
 </script>
 {% endblock %}

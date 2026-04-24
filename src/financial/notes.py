@@ -68,7 +68,7 @@ def generate_notes(sie: SieFile, framework: str = "K2") -> Notes:
         title="Medelantal anställda",
         content="Bolaget har inte haft några anställda under räkenskapsåret."
         if not has_salary_accounts
-        else "Medelantalet anställda under räkenskapsåret.",
+        else "Medelantalet anställda under räkenskapsåret har uppgått till ___.",
     ))
     note_num += 1
 
