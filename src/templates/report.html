@@ -485,25 +485,71 @@
   <section class="report-section" id="notes">
     <h2>Noter</h2>
     {% for note in notes.items %}
-    <div class="note">
-      <h3>Not {{ note.number }} – {{ note.title }}</h3>
-      {% if note.content %}
-      <p>{{ note.content }}</p>
-      {% endif %} {% if note.table %}
-      <table class="data-table">
-        <tbody>
-          {% for label, value in note.table %}
-          <tr>
-            <td>{{ label }}</td>
-            <td class="amount">{{ value }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% endif %}
+    <div class="note" id="note-{{ note.number }}">
+      <h3>
+        Not {{ note.number }} – {{ note.title }} {% if note.content %}
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          onclick="toggleNoteEdit({{ note.number }})"
+        >
+          Redigera
+        </button>
+        {% endif %}
+      </h3>
+      <div id="note-edit-{{ note.number }}" style="display: none">
+        <form
+          method="post"
+          action="{{ url_for('edit_note', file_id=file_id, note_number=note.number) }}"
+        >
+          <div class="form-group">
+            <textarea name="note_content" rows="3" class="form-control">
+{{ note.content }}</textarea
+            >
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Spara</button>
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            onclick="toggleNoteEdit({{ note.number }})"
+          >
+            Avbryt
+          </button>
+        </form>
+      </div>
+      <div id="note-display-{{ note.number }}">
+        {% if note.content %}
+        <p>{{ note.content }}</p>
+        {% endif %} {% if note.table %}
+        <table class="data-table">
+          <tbody>
+            {% for label, value in note.table %}
+            <tr>
+              <td>{{ label }}</td>
+              <td class="amount">{{ value }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
     </div>
     {% endfor %}
   </section>
+
+  <script>
+    function toggleNoteEdit(num) {
+      var form = document.getElementById("note-edit-" + num);
+      var display = document.getElementById("note-display-" + num);
+      if (form.style.display === "none") {
+        form.style.display = "block";
+        display.style.display = "none";
+      } else {
+        form.style.display = "none";
+        display.style.display = "block";
+      }
+    }
+  </script>
 
   <!-- Underskrifter -->
   <section class="report-section" id="signatures">
