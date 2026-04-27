@@ -1,0 +1,4 @@
+sieFiles/
+__pycache__/
+*.pyc
+.venv/
