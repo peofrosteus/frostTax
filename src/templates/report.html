@@ -1,7 +1,16 @@
-{% extends "base.html" %} {% block title %}Årsredovisning – {{ sie.company.name
-}} – frostTax{% endblock %} {% block content %}
-<div class="report-header">
-  <div class="report-actions">
+{% extends "base.html" %} {% block title %}Årsredovisning – {{
+report_state.company_name }} – frostTax{% endblock %} {% block content %}
+<div class="workspace-topbar">
+  <div>
+    <p class="eyebrow">Årsredovisningsverktyg</p>
+    <h1>{{ report_state.company_name }}</h1>
+    <p class="workspace-subtitle">
+      Org.nr {{ report_state.org_number }} {% if filename %}• Källa: {{ filename
+      }}{% endif %}
+    </p>
+  </div>
+
+  <div class="report-actions workspace-actions">
     <a
       href="{{ url_for('report_pdf', file_id=file_id, framework=framework) }}"
       class="btn btn-primary"
@@ -10,17 +19,17 @@
     <a
       href="{{ url_for('tax_summary', file_id=file_id) }}"
       class="btn btn-secondary"
-      >Deklarationsunderlag</a
+      >SRU och deklarationsunderlag</a
     >
     {% if framework == 'K2' %}
     <a
-      href="{{ url_for('report', file_id=file_id, framework='K3') }}"
+      href="{{ url_for('report', file_id=file_id, framework='K3', section=active_section) }}"
       class="btn btn-outline"
       >Byt till K3</a
     >
     {% else %}
     <a
-      href="{{ url_for('report', file_id=file_id, framework='K2') }}"
+      href="{{ url_for('report', file_id=file_id, framework='K2', section=active_section) }}"
       class="btn btn-outline"
       >Byt till K2</a
     >
@@ -28,631 +37,972 @@
   </div>
 </div>
 
-<div class="annual-report">
-  <div class="report-cover">
-    <h1>Årsredovisning</h1>
-    <h2>{{ sie.company.name }}</h2>
-    <p class="org-number">Org.nr {{ sie.company.org_number }}</p>
-    {% if sie.company.fiscal_year_start and sie.company.fiscal_year_end %}
-    <p class="fiscal-year">
-      Räkenskapsåret {{ sie.company.fiscal_year_start.isoformat() }} – {{
-      sie.company.fiscal_year_end.isoformat() }}
-    </p>
-    {% endif %}
-    <p class="framework-badge">{{ framework }}</p>
-  </div>
+<div class="workspace-shell">
+  <aside class="editor-panel">
+    <div class="editor-card">
+      <div class="panel-heading">
+        <p class="eyebrow">Editor</p>
+        <h2>Bygg årsredovisningen</h2>
+      </div>
 
-  <!-- Förvaltningsberättelse -->
-  <section class="report-section" id="management-report">
-    <h2>
-      Förvaltningsberättelse
-      <button
-        type="button"
-        class="btn btn-outline btn-sm"
-        onclick="toggleMgmtEdit()"
-      >
-        Redigera
-      </button>
-    </h2>
+      <nav class="section-tabs" aria-label="Sektioner för årsredovisningen">
+        {% set tabs = [
+          ('grunduppgifter', 'Grunduppgifter'),
+          ('forvaltningsberattelse', 'Förvaltningsberättelse'),
+          ('noter', 'Noter'),
+          ('underskrifter', 'Underskrifter'),
+          ('faststallelseintyg', 'Faststallelseintyg'),
+        ] %}
+        {% for tab_id, tab_label in tabs %}
+        <a
+          href="{{ url_for('report', file_id=file_id, framework=framework, section=tab_id) }}"
+          class="section-tab {% if active_section == tab_id %}is-active{% endif %}"
+          >{{ tab_label }}</a
+        >
+        {% endfor %}
+      </nav>
 
-    <!-- Edit form (hidden by default) -->
-    <div id="mgmt-edit-form" style="display: none">
+      {% if active_section == 'grunduppgifter' %}
       <form
         method="post"
-        action="{{ url_for('edit_mgmt_report', file_id=file_id) }}"
+        action="{{ url_for('update_report_workspace', file_id=file_id) }}"
+        class="editor-form"
       >
-        <div class="form-group">
-          <label for="company_location"><strong>Bolagets säte</strong></label>
-          <input
-            type="text"
-            name="company_location"
-            id="company_location"
-            value="{{ mgmt_report.company_location }}"
-            placeholder="t.ex. Stockholm"
-            class="form-control"
-          />
+        <input type="hidden" name="section" value="grunduppgifter" />
+        <input type="hidden" name="framework" value="{{ framework }}" />
+
+        <div class="form-grid two-columns">
+          <div class="form-group">
+            <label for="company_name">Företagsnamn</label>
+            <input
+              id="company_name"
+              name="company_name"
+              class="form-control"
+              type="text"
+              value="{{ report_state.company_name }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="org_number">Organisationsnummer</label>
+            <input
+              id="org_number"
+              name="org_number"
+              class="form-control"
+              type="text"
+              value="{{ report_state.org_number }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="company_location">Bolagets säte</label>
+            <input
+              id="company_location"
+              name="company_location"
+              class="form-control"
+              type="text"
+              value="{{ report_state.company_location }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="accounting_currency">Redovisningsvaluta</label>
+            <select
+              id="accounting_currency"
+              name="accounting_currency"
+              class="form-control"
+            >
+              <option value="SEK" {% if report_state.accounting_currency == "SEK" %}selected{% endif %}>SEK</option>
+              <option value="EUR" {% if report_state.accounting_currency == "EUR" %}selected{% endif %}>EUR</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="report_issuer">Vem avger årsredovisningen</label>
+            <input
+              id="report_issuer"
+              name="report_issuer"
+              class="form-control"
+              type="text"
+              value="{{ report_state.report_issuer }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="fiscal_year_start">Räkenskapsår start</label>
+            <input
+              id="fiscal_year_start"
+              name="fiscal_year_start"
+              class="form-control"
+              type="date"
+              value="{{ report_state.fiscal_year_start }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="fiscal_year_end">Räkenskapsår slut</label>
+            <input
+              id="fiscal_year_end"
+              name="fiscal_year_end"
+              class="form-control"
+              type="date"
+              value="{{ report_state.fiscal_year_end }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="previous_year_start">Jämförelseår start</label>
+            <input
+              id="previous_year_start"
+              name="previous_year_start"
+              class="form-control"
+              type="date"
+              value="{{ report_state.previous_year_start }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="previous_year_end">Jämförelseår slut</label>
+            <input
+              id="previous_year_end"
+              name="previous_year_end"
+              class="form-control"
+              type="date"
+              value="{{ report_state.previous_year_end }}"
+            />
+          </div>
         </div>
+
+        <div class="editor-actions">
+          <button type="submit" class="btn btn-primary">
+            Spara grunduppgifter
+          </button>
+        </div>
+      </form>
+      {% elif active_section == 'forvaltningsberattelse' %}
+      <form
+        method="post"
+        action="{{ url_for('update_report_workspace', file_id=file_id) }}"
+        class="editor-form"
+      >
+        <input type="hidden" name="section" value="forvaltningsberattelse" />
+        <input type="hidden" name="framework" value="{{ framework }}" />
+
         <div class="form-group">
-          <label for="business_description"
-            ><strong>Verksamheten</strong></label
-          >
+          <label for="business_description">Verksamhetsbeskrivning</label>
           <textarea
-            name="business_description"
             id="business_description"
-            rows="3"
+            name="business_description"
+            rows="5"
             class="form-control"
           >
-{{ mgmt_report.business_description }}</textarea
+{{ report_state.business_description }}</textarea
           >
         </div>
         <div class="form-group">
           <label for="significant_events"
-            ><strong>Väsentliga händelser under räkenskapsåret</strong></label
+            >Väsentliga händelser under året</label
           >
           <textarea
-            name="significant_events"
             id="significant_events"
-            rows="3"
+            name="significant_events"
+            rows="4"
             class="form-control"
           >
-{{ mgmt_report.significant_events }}</textarea
+{{ report_state.significant_events }}</textarea
           >
         </div>
         <div class="form-group">
           <label for="expected_future_development"
-            ><strong>Förväntad framtida utveckling</strong></label
+            >Förväntad framtida utveckling</label
           >
           <textarea
-            name="expected_future_development"
             id="expected_future_development"
-            rows="3"
+            name="expected_future_development"
+            rows="4"
             class="form-control"
           >
-{{ mgmt_report.expected_future_development }}</textarea
+{{ report_state.expected_future_development }}</textarea
           >
         </div>
         <div class="form-group">
           <label for="profit_disposition_text"
-            ><strong
-              >Resultatdisposition (fritext, lämna tomt för automatisk)</strong
-            ></label
+            >Resultatdisposition, inledande text</label
           >
           <textarea
-            name="profit_disposition_text"
             id="profit_disposition_text"
+            name="profit_disposition_text"
             rows="3"
             class="form-control"
+            placeholder="Lämnas tomt för att använda standardformulering."
           >
-{{ mgmt_report.profit_disposition_text }}</textarea
-          >
+{{ report_state.profit_disposition_text }}</textarea>
         </div>
-        <button type="submit" class="btn btn-primary">Spara ändringar</button>
-        <button
-          type="button"
-          class="btn btn-outline"
-          onclick="toggleMgmtEdit()"
-        >
-          Avbryt
-        </button>
-      </form>
-    </div>
 
-    <!-- Display view -->
-    <div id="mgmt-display">
-      <h3>Allmänt om verksamheten</h3>
-      {% if mgmt_report.company_location %}
-      <p>Bolaget har sitt säte i {{ mgmt_report.company_location }}.</p>
-      {% endif %}
-      <p>{{ mgmt_report.business_description }}</p>
-
-      {% if mgmt_report.significant_events %}
-      <h3>Väsentliga händelser under räkenskapsåret</h3>
-      <p>{{ mgmt_report.significant_events }}</p>
-      {% endif %} {% if mgmt_report.expected_future_development %}
-      <h3>Förväntad framtida utveckling</h3>
-      <p>{{ mgmt_report.expected_future_development }}</p>
-      {% endif %}
-
-      <h3>Flerårsöversikt</h3>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th></th>
-            {% for year in mgmt_report.multi_year_overview %}
-            <th class="amount">{{ year.year }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Nettoomsättning (kr)</td>
-            {% for year in mgmt_report.multi_year_overview %}
-            <td class="amount">
-              {{ "{:,.0f}".format(year.net_revenue).replace(",", " ") }}
-            </td>
-            {% endfor %}
-          </tr>
-          <tr>
-            <td>Resultat efter finansiella poster (kr)</td>
-            {% for year in mgmt_report.multi_year_overview %}
-            <td class="amount">
-              {{ "{:,.0f}".format(year.result_after_financial).replace(",", " ")
-              }}
-            </td>
-            {% endfor %}
-          </tr>
-          <tr>
-            <td>Årets resultat (kr)</td>
-            {% for year in mgmt_report.multi_year_overview %}
-            <td class="amount">
-              {{ "{:,.0f}".format(year.annual_result).replace(",", " ") }}
-            </td>
-            {% endfor %}
-          </tr>
-          <tr>
-            <td>Balansomslutning (kr)</td>
-            {% for year in mgmt_report.multi_year_overview %}
-            <td class="amount">
-              {{ "{:,.0f}".format(year.total_assets).replace(",", " ") }}
-            </td>
-            {% endfor %}
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>Resultatdisposition</h3>
-      {% if mgmt_report.profit_disposition_text %}
-      <p>{{ mgmt_report.profit_disposition_text }}</p>
-      {% else %}
-      <p>Styrelsen föreslår att till förfogande stående medel:</p>
-      <table class="data-table">
-        <tbody>
-          <tr>
-            <td>Balanserat resultat</td>
-            <td class="amount">
-              {{
-              "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",",
-              " ") }} kr
-            </td>
-          </tr>
-          <tr>
-            <td>Årets resultat</td>
-            <td class="amount">
-              {{
-              "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",",
-              " ") }} kr
-            </td>
-          </tr>
-          <tr class="sum-row">
-            <td>Summa</td>
-            <td class="amount">
-              {{
-              "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",",
-              " ") }} kr
-            </td>
-          </tr>
-          <tr>
-            <td>I ny räkning överförs</td>
-            <td class="amount">
-              {{
-              "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",",
-              " ") }} kr
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      {% endif %}
-    </div>
-  </section>
-
-  <script>
-    function toggleMgmtEdit() {
-      var form = document.getElementById("mgmt-edit-form");
-      var display = document.getElementById("mgmt-display");
-      if (form.style.display === "none") {
-        form.style.display = "block";
-        display.style.display = "none";
-      } else {
-        form.style.display = "none";
-        display.style.display = "block";
-      }
-    }
-  </script>
-
-  <!-- Resultaträkning -->
-  <section class="report-section" id="income-statement">
-    <h2>Resultaträkning</h2>
-    <table class="data-table financial-table">
-      <thead>
-        <tr>
-          <th></th>
-          <th class="amount">
-            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
-            else 'Aktuellt år' }}
-          </th>
-          {% if sie.has_previous_year %}
-          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
-          {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for line in income_stmt.lines %}
-        <tr
-          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
-        >
-          <td>{{ line.label }}</td>
-          <td class="amount">
-            {% if not line.is_sum or line.amount != 0 %} {{
-            "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
-          </td>
-          {% if sie.has_previous_year %}
-          <td class="amount">
-            {% if not line.is_sum or line.previous_amount != 0 %} {{
-            "{:,.0f}".format(line.previous_amount).replace(",", " ") }} {% endif
-            %}
-          </td>
-          {% endif %}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
-
-  <!-- Balansräkning -->
-  <section class="report-section" id="balance-sheet">
-    <h2>Balansräkning</h2>
-
-    <h3>Tillgångar</h3>
-    <table class="data-table financial-table">
-      <thead>
-        <tr>
-          <th></th>
-          <th class="amount">
-            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
-            else 'Aktuellt år' }}
-          </th>
-          {% if sie.has_previous_year %}
-          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
-          {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for line in balance.assets %}
-        <tr
-          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
-        >
-          <td>{{ line.label }}</td>
-          <td class="amount">
-            {% if not line.is_sum or line.amount != 0 %} {{
-            "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
-          </td>
-          {% if sie.has_previous_year %}
-          <td class="amount">
-            {% if not line.is_sum or line.previous_amount != 0 %} {{
-            "{:,.0f}".format(line.previous_amount).replace(",", " ") }} {% endif
-            %}
-          </td>
-          {% endif %}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <h3>Eget kapital och skulder</h3>
-    <table class="data-table financial-table">
-      <thead>
-        <tr>
-          <th></th>
-          <th class="amount">
-            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
-            else 'Aktuellt år' }}
-          </th>
-          {% if sie.has_previous_year %}
-          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
-          {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for line in balance.equity_and_liabilities %}
-        <tr
-          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
-        >
-          <td>{{ line.label }}</td>
-          <td class="amount">
-            {% if not line.is_sum or line.amount != 0 %} {{
-            "{:,.0f}".format(line.amount).replace(",", " ") }} {% endif %}
-          </td>
-          {% if sie.has_previous_year %}
-          <td class="amount">
-            {% if not line.is_sum or line.previous_amount != 0 %} {{
-            "{:,.0f}".format(line.previous_amount).replace(",", " ") }} {% endif
-            %}
-          </td>
-          {% endif %}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
-
-  {% if equity_changes %}
-  <!-- Förändringar i eget kapital (K3) -->
-  <section class="report-section" id="equity-changes">
-    <h2>Förändringar i eget kapital</h2>
-    <table class="data-table financial-table">
-      <thead>
-        <tr>
-          <th></th>
-          {% for col in equity_changes.columns %}
-          <th class="amount">{{ col.label }}</th>
-          {% endfor %}
-          <th class="amount">Totalt</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Belopp vid årets ingång</td>
-          {% for col in equity_changes.columns %}
-          <td class="amount">
-            {{ "{:,.0f}".format(col.opening).replace(",", " ") }}
-          </td>
-          {% endfor %}
-          <td class="amount">
-            {{ "{:,.0f}".format(equity_changes.total_opening).replace(",", " ")
-            }}
-          </td>
-        </tr>
-        <tr>
-          <td>Disposition enligt beslut av årsstämma</td>
-          {% for col in equity_changes.columns %}
-          <td class="amount">
-            {% if col.appropriation %}{{
-            "{:,.0f}".format(col.appropriation).replace(",", " ") }}{% endif %}
-          </td>
-          {% endfor %}
-          <td class="amount">0</td>
-        </tr>
-        <tr>
-          <td>Årets resultat</td>
-          {% for col in equity_changes.columns %}
-          <td class="amount">
-            {% if col.annual_result %}{{
-            "{:,.0f}".format(col.annual_result).replace(",", " ") }}{% endif %}
-          </td>
-          {% endfor %}
-          <td class="amount">
-            {{ "{:,.0f}".format(equity_changes.total_annual_result).replace(",",
-            " ") }}
-          </td>
-        </tr>
-        <tr class="sum-row">
-          <td>Belopp vid årets utgång</td>
-          {% for col in equity_changes.columns %}
-          <td class="amount">
-            {{ "{:,.0f}".format(col.closing).replace(",", " ") }}
-          </td>
-          {% endfor %}
-          <td class="amount">
-            {{ "{:,.0f}".format(equity_changes.total_closing).replace(",", " ")
-            }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-  {% endif %} {% if cash_flow %}
-  <!-- Kassaflödesanalys (K3) -->
-  <section class="report-section" id="cash-flow">
-    <h2>Kassaflödesanalys</h2>
-    <table class="data-table financial-table">
-      <thead>
-        <tr>
-          <th></th>
-          <th class="amount">
-            {{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end
-            else 'Aktuellt år' }}
-          </th>
-          {% if sie.has_previous_year %}
-          <th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>
-          {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for line in cash_flow.lines %}
-        <tr
-          class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
-        >
-          <td>{{ line.label }}</td>
-          <td class="amount">
-            {% if not line.is_sum or line.amount != 0 %}{{
-            "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
-          </td>
-          {% if sie.has_previous_year %}
-          <td class="amount">
-            {% if not line.is_sum or line.previous_amount != 0 %}{{
-            "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{% endif
-            %}
-          </td>
-          {% endif %}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
-  {% endif %}
-
-  <!-- Noter -->
-  <section class="report-section" id="notes">
-    <h2>Noter</h2>
-    {% for note in notes.items %}
-    <div class="note" id="note-{{ note.number }}">
-      <h3>
-        Not {{ note.number }} – {{ note.title }} {% if note.content %}
-        <button
-          type="button"
-          class="btn btn-outline btn-sm"
-          onclick="toggleNoteEdit({{ note.number }})"
-        >
-          Redigera
-        </button>
-        {% endif %}
-      </h3>
-      <div id="note-edit-{{ note.number }}" style="display: none">
-        <form
-          method="post"
-          action="{{ url_for('edit_note', file_id=file_id, note_number=note.number) }}"
-        >
+        <h3 class="form-section-heading">Strukturerad resultatdisposition (kr)</h3>
+        <p class="note-editor-help">
+          Belopp i kronor. Lämna tomt för att använda standardförslaget
+          (allt i ny räkning). Summan måste motsvara fritt eget kapital.
+        </p>
+        <div class="form-grid two-columns">
           <div class="form-group">
-            <textarea name="note_content" rows="3" class="form-control">
+            <label for="disposition_dividend">Utdelning till aktieägare</label>
+            <input
+              id="disposition_dividend"
+              name="disposition_dividend"
+              class="form-control"
+              type="text"
+              inputmode="numeric"
+              placeholder="0"
+              value="{{ report_state.disposition_dividend }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="disposition_to_reserve_fund">Avsättning till reservfond</label>
+            <input
+              id="disposition_to_reserve_fund"
+              name="disposition_to_reserve_fund"
+              class="form-control"
+              type="text"
+              inputmode="numeric"
+              placeholder="0"
+              value="{{ report_state.disposition_to_reserve_fund }}"
+            />
+          </div>
+          <div class="form-group full-width">
+            <label for="disposition_to_new_account">I ny räkning överförs</label>
+            <input
+              id="disposition_to_new_account"
+              name="disposition_to_new_account"
+              class="form-control"
+              type="text"
+              inputmode="numeric"
+              placeholder="(räknas automatiskt)"
+              value="{{ report_state.disposition_to_new_account }}"
+            />
+          </div>
+        </div>
+
+        <div class="editor-actions">
+          <button type="submit" class="btn btn-primary">
+            Spara förvaltningsberättelse
+          </button>
+        </div>
+      </form>
+      {% elif active_section == 'noter' %}
+      <form
+        method="post"
+        action="{{ url_for('update_report_workspace', file_id=file_id) }}"
+        class="editor-form"
+      >
+        <input type="hidden" name="section" value="noter" />
+        <input type="hidden" name="framework" value="{{ framework }}" />
+
+        <div class="stacked-note-editor">
+          {% for note in notes.items %}
+          <div class="note-editor-card">
+            <div class="note-editor-header">
+              <h3>Not {{ note.number }}</h3>
+              <p>{{ note.title }}</p>
+            </div>
+            <textarea
+              name="note_{{ note.number }}"
+              rows="5"
+              class="form-control"
+              placeholder="Komplettera eller justera nottexten här…"
+            >
 {{ note.content }}</textarea
             >
+            {% if note.table %}
+            <p class="note-editor-help">
+              Den här noten innehåller även en tabell i förhandsgranskningen.
+            </p>
+            {% endif %}
           </div>
-          <button type="submit" class="btn btn-primary btn-sm">Spara</button>
-          <button
-            type="button"
-            class="btn btn-outline btn-sm"
-            onclick="toggleNoteEdit({{ note.number }})"
-          >
-            Avbryt
+          {% endfor %}
+        </div>
+
+        <div class="editor-actions">
+          <button type="submit" class="btn btn-primary">Spara noter</button>
+        </div>
+      </form>
+      {% elif active_section == 'underskrifter' %}
+      <form
+        method="post"
+        action="{{ url_for('update_report_workspace', file_id=file_id) }}"
+        class="editor-form"
+      >
+        <input type="hidden" name="section" value="underskrifter" />
+        <input type="hidden" name="framework" value="{{ framework }}" />
+
+        <div class="form-grid two-columns">
+          <div class="form-group">
+            <label for="signing_location">Ort för undertecknande</label>
+            <input
+              id="signing_location"
+              name="signing_location"
+              class="form-control"
+              type="text"
+              value="{{ report_state.signing_location }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="prepared_date"
+              >Datum då årsredovisningen färdigställdes</label
+            >
+            <input
+              id="prepared_date"
+              name="prepared_date"
+              class="form-control"
+              type="date"
+              value="{{ report_state.prepared_date }}"
+            />
+          </div>
+        </div>
+
+        <div class="signature-list">
+          {% for index in range(report_state.signatures|length) %}
+          {% set current_signature = report_state.signatures[index] %}
+          <div class="signature-editor-card">
+            <div class="signature-editor-header">
+              <h3>Underskrift {{ index + 1 }}</h3>
+              {% if report_state.signatures|length > 1 %}
+              <button
+                type="submit"
+                name="action"
+                value="remove_{{ index }}"
+                class="btn btn-outline btn-sm"
+                formnovalidate
+              >
+                Ta bort
+              </button>
+              {% endif %}
+            </div>
+            <div class="form-grid two-columns">
+              <div class="form-group full-width">
+                <label for="signature_name_{{ index }}">Namn</label>
+                <input
+                  id="signature_name_{{ index }}"
+                  name="signature_name"
+                  class="form-control"
+                  type="text"
+                  value="{{ current_signature.name }}"
+                />
+              </div>
+              <div class="form-group">
+                <label for="signature_role_{{ index }}">Befattning</label>
+                <input
+                  id="signature_role_{{ index }}"
+                  name="signature_role"
+                  class="form-control"
+                  type="text"
+                  value="{{ current_signature.role }}"
+                />
+              </div>
+              <div class="form-group">
+                <label for="signature_date_{{ index }}"
+                  >Underskriftsdatum</label
+                >
+                <input
+                  id="signature_date_{{ index }}"
+                  name="signature_date"
+                  class="form-control"
+                  type="date"
+                  value="{{ current_signature.signed_date }}"
+                />
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="editor-actions">
+          <button type="submit" class="btn btn-primary">
+            Spara underskrifter
           </button>
-        </form>
+          <button
+            type="submit"
+            name="action"
+            value="add"
+            class="btn btn-secondary"
+            formnovalidate
+          >
+            + Lägg till underskrift
+          </button>
+        </div>
+      </form>
+      {% elif active_section == 'faststallelseintyg' %}
+      <form
+        method="post"
+        action="{{ url_for('update_report_workspace', file_id=file_id) }}"
+        class="editor-form"
+      >
+        <input type="hidden" name="section" value="faststallelseintyg" />
+        <input type="hidden" name="framework" value="{{ framework }}" />
+
+        <div class="form-grid two-columns">
+          <div class="form-group">
+            <label for="agm_date">Datum för årsstämma</label>
+            <input
+              id="agm_date"
+              name="agm_date"
+              class="form-control"
+              type="date"
+              value="{{ report_state.agm_date }}"
+            />
+          </div>
+          <div class="form-group">
+            <label for="faststallelse_disposition_choice">Beslut om resultatdisposition</label>
+            <select
+              id="faststallelse_disposition_choice"
+              name="faststallelse_disposition_choice"
+              class="form-control"
+            >
+              <option value="enligt_forslag" {% if report_state.faststallelse_disposition_choice == 'enligt_forslag' %}selected{% endif %}>Enligt styrelsens förslag</option>
+              <option value="annan" {% if report_state.faststallelse_disposition_choice == 'annan' %}selected{% endif %}>Annan disposition (ange nedan)</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="faststallelse_disposition_text">Avvikande beslut (valfritt)</label>
+            <textarea
+              id="faststallelse_disposition_text"
+              name="faststallelse_disposition_text"
+              rows="3"
+              class="form-control"
+              placeholder="Lämnas tomt om stämman beslutade enligt styrelsens förslag."
+            >
+{{ report_state.faststallelse_disposition_text }}</textarea>
+          </div>
+        </div>
+
+        <div class="signature-editor-card">
+          <h3>Intygets undertecknare</h3>
+          <p class="note-editor-help">
+            Faststallelseintyget signeras av en styrelseledamot eller VD som intygar
+            att stämman beslutat fastställa resultat- och balansräkningen.
+          </p>
+          <div class="form-grid two-columns">
+            <div class="form-group full-width">
+              <label for="certifier_name">Namn</label>
+              <input
+                id="certifier_name"
+                name="certifier_name"
+                class="form-control"
+                type="text"
+                value="{{ report_state.certifier_name }}"
+              />
+            </div>
+            <div class="form-group">
+              <label for="certifier_role">Befattning</label>
+              <input
+                id="certifier_role"
+                name="certifier_role"
+                class="form-control"
+                type="text"
+                value="{{ report_state.certifier_role }}"
+              />
+            </div>
+            <div class="form-group">
+              <label for="certifier_date">Datum för intyg</label>
+              <input
+                id="certifier_date"
+                name="certifier_date"
+                class="form-control"
+                type="date"
+                value="{{ report_state.certifier_date }}"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-actions">
+          <button type="submit" class="btn btn-primary">
+            Spara faststallelseintyg
+          </button>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="checklist-card">
+      <div class="panel-heading">
+        <p class="eyebrow">Kontroller</p>
+        <h2>Att åtgärda före export</h2>
       </div>
-      <div id="note-display-{{ note.number }}">
-        {% if note.content %}
-        <p>{{ note.content }}</p>
-        {% endif %} {% if note.table %}
+      <ul class="compliance-list">
+        {% for item in compliance_items %}
+        <li class="compliance-item compliance-{{ item.status }}">
+          <div>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.description }}</p>
+          </div>
+          <span class="status-pill status-{{ item.status }}"
+            >{% if item.status == 'complete' %}Klar{% elif item.status ==
+            'warning' %}Varning{% else %}Krävs{% endif %}</span
+          >
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </aside>
+
+  <section class="preview-panel">
+    <div class="preview-surface">
+      <div class="preview-cover">
+        <p class="eyebrow">Förhandsgranskning</p>
+        <h2>Årsredovisning</h2>
+        <h3>{{ report_state.company_name }}</h3>
+        <p class="org-number">Org.nr {{ report_state.org_number }}</p>
+        {% if report_state.fiscal_year_start and report_state.fiscal_year_end %}
+        <p class="fiscal-year">
+          Räkenskapsåret {{ report_state.fiscal_year_start }} – {{
+          report_state.fiscal_year_end }}
+        </p>
+        {% endif %}
+        <div class="cover-meta">
+          <span class="framework-badge">{{ framework }}</span>
+          <span class="framework-badge neutral"
+            >{{ report_state.accounting_currency }}</span
+          >
+          <span class="framework-badge neutral"
+            >{{ report_state.report_issuer }}</span
+          >
+        </div>
+      </div>
+
+      <section class="report-section" id="management-report">
+        <h2>Förvaltningsberättelse</h2>
+        <h3>Allmänt om verksamheten</h3>
+        {% if mgmt_report.company_location %}
+        <p>Bolaget har sitt säte i {{ mgmt_report.company_location }}.</p>
+        {% endif %}
+        <p>{{ mgmt_report.business_description }}</p>
+
+        {% if mgmt_report.significant_events %}
+        <h3>Väsentliga händelser under räkenskapsåret</h3>
+        <p>{{ mgmt_report.significant_events }}</p>
+        {% endif %} {% if mgmt_report.expected_future_development %}
+        <h3>Förväntad framtida utveckling</h3>
+        <p>{{ mgmt_report.expected_future_development }}</p>
+        {% endif %}
+
+        <h3>Flerårsöversikt</h3>
         <table class="data-table">
-          <tbody>
-            {% for label, value in note.table %}
+          <thead>
             <tr>
-              <td>{{ label }}</td>
-              <td class="amount">{{ value }}</td>
+              <th></th>
+              {% for year in mgmt_report.multi_year_overview %}
+              <th class="amount">{{ year.year }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Nettoomsättning ({{ report_state.accounting_currency }})</td>
+              {% for year in mgmt_report.multi_year_overview %}
+              <td class="amount">
+                {{ "{:,.0f}".format(year.net_revenue).replace(",", " ") }}
+              </td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td>Resultat efter finansiella poster</td>
+              {% for year in mgmt_report.multi_year_overview %}
+              <td class="amount">
+                {{ "{:,.0f}".format(year.result_after_financial).replace(",", "
+                ") }}
+              </td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td>Årets resultat</td>
+              {% for year in mgmt_report.multi_year_overview %}
+              <td class="amount">
+                {{ "{:,.0f}".format(year.annual_result).replace(",", " ") }}
+              </td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td>Balansomslutning</td>
+              {% for year in mgmt_report.multi_year_overview %}
+              <td class="amount">
+                {{ "{:,.0f}".format(year.total_assets).replace(",", " ") }}
+              </td>
+              {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Resultatdisposition</h3>
+        {% if mgmt_report.profit_disposition_text %}
+        <p>{{ mgmt_report.profit_disposition_text }}</p>
+        {% endif %}
+        <p>Styrelsen föreslår att till förfogande stående medel:</p>
+        <table class="data-table compact-table">
+          <tbody>
+            <tr>
+              <td>Balanserat resultat</td>
+              <td class="amount">
+                {{ "{:,.0f}".format(mgmt_report.profit_disposition.retained_earnings).replace(",", " ") }}
+              </td>
+            </tr>
+            <tr>
+              <td>Årets resultat</td>
+              <td class="amount">
+                {{ "{:,.0f}".format(mgmt_report.profit_disposition.annual_result).replace(",", " ") }}
+              </td>
+            </tr>
+            <tr class="sum-row">
+              <td>Summa till förfogande</td>
+              <td class="amount">
+                {{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",", " ") }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>disponeras enligt följande:</p>
+        <table class="data-table compact-table">
+          <tbody>
+            {% if mgmt_report.profit_disposition.dividend %}
+            <tr>
+              <td>Utdelning till aktieägare</td>
+              <td class="amount">
+                {{ "{:,.0f}".format(mgmt_report.profit_disposition.dividend).replace(",", " ") }}
+              </td>
+            </tr>
+            {% endif %}
+            {% if mgmt_report.profit_disposition.to_reserve_fund %}
+            <tr>
+              <td>Avsättning till reservfond</td>
+              <td class="amount">
+                {{ "{:,.0f}".format(mgmt_report.profit_disposition.to_reserve_fund).replace(",", " ") }}
+              </td>
+            </tr>
+            {% endif %}
+            <tr>
+              <td>I ny räkning överförs</td>
+              <td class="amount">
+                {{ "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",", " ") }}
+              </td>
+            </tr>
+            <tr class="sum-row">
+              <td>Summa</td>
+              <td class="amount">
+                {{ "{:,.0f}".format(mgmt_report.profit_disposition.total_distributed).replace(",", " ") }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        {% if not mgmt_report.profit_disposition.is_balanced %}
+        <p class="warning-text">
+          ⚠ Beloppen i resultatdispositionen summerar inte till fritt eget kapital.
+          Differens: {{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds - mgmt_report.profit_disposition.total_distributed).replace(",", " ") }} kr.
+        </p>
+        {% endif %}
+      </section>
+
+      <section class="report-section" id="income-statement">
+        <h2>Resultaträkning</h2>
+        <table class="data-table financial-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="amount">
+                {{ report_state.fiscal_year_end[:4] if
+                report_state.fiscal_year_end else 'Aktuellt år' }}
+              </th>
+              {% if sie.has_previous_year %}
+              <th class="amount">
+                {{ report_state.previous_year_end[:4] if
+                report_state.previous_year_end else
+                sie.company.prev_fiscal_year_end.year }}
+              </th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in income_stmt.lines %}
+            <tr
+              class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+            >
+              <td>{{ line.label }}</td>
+              <td class="amount">
+                {% if not line.is_sum or line.amount != 0 %}{{
+                "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+              </td>
+              {% if sie.has_previous_year %}
+              <td class="amount">
+                {% if not line.is_sum or line.previous_amount != 0 %}{{
+                "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{%
+                endif %}
+              </td>
+              {% endif %}
             </tr>
             {% endfor %}
           </tbody>
         </table>
-        {% endif %}
-      </div>
-    </div>
-    {% endfor %}
-  </section>
+      </section>
 
-  <script>
-    function toggleNoteEdit(num) {
-      var form = document.getElementById("note-edit-" + num);
-      var display = document.getElementById("note-display-" + num);
-      if (form.style.display === "none") {
-        form.style.display = "block";
-        display.style.display = "none";
-      } else {
-        form.style.display = "none";
-        display.style.display = "block";
-      }
-    }
-  </script>
-
-  <!-- Underskrifter -->
-  <section class="report-section" id="signatures">
-    <h2>
-      Underskrifter
-      <button
-        type="button"
-        class="btn btn-outline btn-sm"
-        onclick="toggleSigEdit()"
-      >
-        Redigera
-      </button>
-    </h2>
-
-    <!-- Edit form (hidden by default) -->
-    <div id="sig-edit-form" style="display: none">
-      <form
-        method="post"
-        action="{{ url_for('edit_signatures', file_id=file_id) }}"
-      >
-        <div id="sig-rows">
-          {% for sig in signatures %}
-          <div class="sig-edit-row form-group">
-            <input
-              type="text"
-              name="sig_name"
-              value="{{ sig.name }}"
-              placeholder="Namn"
-              class="form-control"
-              style="display: inline-block; width: 55%"
-            />
-            <input
-              type="text"
-              name="sig_role"
-              value="{{ sig.role }}"
-              placeholder="Roll"
-              class="form-control"
-              style="display: inline-block; width: 35%"
-            />
-            <button
-              type="button"
-              class="btn btn-outline btn-sm"
-              onclick="this.parentElement.remove()"
+      <section class="report-section" id="balance-sheet">
+        <h2>Balansräkning</h2>
+        <h3>Tillgångar</h3>
+        <table class="data-table financial-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="amount">
+                {{ report_state.fiscal_year_end[:4] if
+                report_state.fiscal_year_end else 'Aktuellt år' }}
+              </th>
+              {% if sie.has_previous_year %}
+              <th class="amount">
+                {{ report_state.previous_year_end[:4] if
+                report_state.previous_year_end else
+                sie.company.prev_fiscal_year_end.year }}
+              </th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in balance.assets %}
+            <tr
+              class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
             >
-              ✕
-            </button>
+              <td>{{ line.label }}</td>
+              <td class="amount">
+                {% if not line.is_sum or line.amount != 0 %}{{
+                "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+              </td>
+              {% if sie.has_previous_year %}
+              <td class="amount">
+                {% if not line.is_sum or line.previous_amount != 0 %}{{
+                "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{%
+                endif %}
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <h3>Eget kapital och skulder</h3>
+        <table class="data-table financial-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="amount">
+                {{ report_state.fiscal_year_end[:4] if
+                report_state.fiscal_year_end else 'Aktuellt år' }}
+              </th>
+              {% if sie.has_previous_year %}
+              <th class="amount">
+                {{ report_state.previous_year_end[:4] if
+                report_state.previous_year_end else
+                sie.company.prev_fiscal_year_end.year }}
+              </th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in balance.equity_and_liabilities %}
+            <tr
+              class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+            >
+              <td>{{ line.label }}</td>
+              <td class="amount">
+                {% if not line.is_sum or line.amount != 0 %}{{
+                "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+              </td>
+              {% if sie.has_previous_year %}
+              <td class="amount">
+                {% if not line.is_sum or line.previous_amount != 0 %}{{
+                "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{%
+                endif %}
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+
+      {% if equity_changes %}
+      <section class="report-section">
+        <h2>Förändringar i eget kapital</h2>
+        <table class="data-table financial-table">
+          <thead>
+            <tr>
+              <th></th>
+              {% for col in equity_changes.columns %}
+              <th class="amount">{{ col.label }}</th>
+              {% endfor %}
+              <th class="amount">Totalt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Belopp vid årets ingång</td>
+              {% for col in equity_changes.columns %}
+              <td class="amount">
+                {{ "{:,.0f}".format(col.opening).replace(",", " ") }}
+              </td>
+              {% endfor %}
+              <td class="amount">
+                {{ "{:,.0f}".format(equity_changes.total_opening).replace(",", "
+                ") }}
+              </td>
+            </tr>
+            <tr>
+              <td>Disposition enligt beslut av årsstämma</td>
+              {% for col in equity_changes.columns %}
+              <td class="amount">
+                {% if col.appropriation %}{{
+                "{:,.0f}".format(col.appropriation).replace(",", " ") }}{% endif
+                %}
+              </td>
+              {% endfor %}
+              <td class="amount">0</td>
+            </tr>
+            <tr>
+              <td>Årets resultat</td>
+              {% for col in equity_changes.columns %}
+              <td class="amount">
+                {% if col.annual_result %}{{
+                "{:,.0f}".format(col.annual_result).replace(",", " ") }}{% endif
+                %}
+              </td>
+              {% endfor %}
+              <td class="amount">
+                {{
+                "{:,.0f}".format(equity_changes.total_annual_result).replace(",",
+                " ") }}
+              </td>
+            </tr>
+            <tr class="sum-row">
+              <td>Belopp vid årets utgång</td>
+              {% for col in equity_changes.columns %}
+              <td class="amount">
+                {{ "{:,.0f}".format(col.closing).replace(",", " ") }}
+              </td>
+              {% endfor %}
+              <td class="amount">
+                {{ "{:,.0f}".format(equity_changes.total_closing).replace(",", "
+                ") }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      {% endif %} {% if cash_flow %}
+      <section class="report-section">
+        <h2>Kassaflödesanalys</h2>
+        <table class="data-table financial-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="amount">
+                {{ report_state.fiscal_year_end[:4] if
+                report_state.fiscal_year_end else 'Aktuellt år' }}
+              </th>
+              {% if sie.has_previous_year %}
+              <th class="amount">
+                {{ report_state.previous_year_end[:4] if
+                report_state.previous_year_end else
+                sie.company.prev_fiscal_year_end.year }}
+              </th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in cash_flow.lines %}
+            <tr
+              class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
+            >
+              <td>{{ line.label }}</td>
+              <td class="amount">
+                {% if not line.is_sum or line.amount != 0 %}{{
+                "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
+              </td>
+              {% if sie.has_previous_year %}
+              <td class="amount">
+                {% if not line.is_sum or line.previous_amount != 0 %}{{
+                "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{%
+                endif %}
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      <section class="report-section" id="notes">
+        <h2>Noter</h2>
+        {% for note in notes.items %}
+        <div class="note">
+          <h3>Not {{ note.number }} – {{ note.title }}</h3>
+          {% if note.content %}
+          <p>{{ note.content }}</p>
+          {% endif %} {% if note.table %}
+          <table class="data-table compact-table">
+            <tbody>
+              {% for label, value in note.table %}
+              <tr>
+                <td>{{ label }}</td>
+                <td class="amount">{{ value }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </section>
+
+      <section class="report-section" id="signatures">
+        <h2>Underskrifter</h2>
+        <p>
+          {{ report_state.signing_location or 'Ort ej angiven' }}, {{
+          report_state.prepared_date or 'datum saknas' }}
+        </p>
+        <div class="signature-grid">
+          {% for signature in report_state.signatures %}
+          <div class="signature-box">
+            <div class="line"></div>
+            <strong>{{ signature.name }}</strong>
+            <p class="role">{{ signature.role }}</p>
+            <p class="signature-date">{{ signature.signed_date }}</p>
           </div>
           {% endfor %}
         </div>
-        <button
-          type="button"
-          class="btn btn-outline btn-sm"
-          onclick="addSigRow()"
-          style="margin-bottom: 12px"
-        >
-          + Lägg till person
-        </button>
-        <br />
-        <button type="submit" class="btn btn-primary">
-          Spara underskrifter
-        </button>
-        <button type="button" class="btn btn-outline" onclick="toggleSigEdit()">
-          Avbryt
-        </button>
-      </form>
-    </div>
+      </section>
 
-    <!-- Display view -->
-    <div id="sig-display">
-      <p>{{ sie.company.address_postal }}, den ____________________</p>
-      {% for sig in signatures %}
-      <div class="signature-line">
-        <div class="signature-box">
-          <div class="line"></div>
-          <p>{{ sig.name }}</p>
-          <p class="role">{{ sig.role }}</p>
+      <section class="report-section" id="faststallelseintyg">
+        <h2>Faststallelseintyg</h2>
+        <p>
+          Undertecknad styrelseledamot intygar härmed att resultaträkningen och
+          balansräkningen för {{ report_state.company_name or 'bolaget' }}
+          (org.nr {{ report_state.org_number or '–' }}) har fastställts på
+          årsstämma den {{ report_state.agm_date or '[datum saknas]' }}.
+        </p>
+        {% if report_state.faststallelse_disposition_choice == 'annan' and report_state.faststallelse_disposition_text %}
+        <p>
+          Stämman beslutade om följande disposition av bolagets resultat:
+          {{ report_state.faststallelse_disposition_text }}
+        </p>
+        {% else %}
+        <p>
+          Stämman beslutade att bolagets resultat behandlas enligt förslaget i
+          förvaltningsberättelsen.
+        </p>
+        {% endif %}
+        <p>
+          Årsredovisningen är upprättad i enlighet med årsredovisningslagen och
+          {{ 'BFNAR 2016:10 (K2)' if framework == 'K2' else 'BFNAR 2012:1 (K3)' }}.
+        </p>
+        <div class="signature-grid">
+          <div class="signature-box">
+            <div class="line"></div>
+            <strong>{{ report_state.certifier_name or '[Namn]' }}</strong>
+            <p class="role">{{ report_state.certifier_role }}</p>
+            <p class="signature-date">{{ report_state.certifier_date or '[datum]' }}</p>
+          </div>
         </div>
-      </div>
-      {% endfor %}
+      </section>
     </div>
   </section>
 </div>
-
-<script>
-  function toggleSigEdit() {
-    var form = document.getElementById("sig-edit-form");
-    var display = document.getElementById("sig-display");
-    if (form.style.display === "none") {
-      form.style.display = "block";
-      display.style.display = "none";
-    } else {
-      form.style.display = "none";
-      display.style.display = "block";
-    }
-  }
-  function addSigRow() {
-    var row = document.createElement("div");
-    row.className = "sig-edit-row form-group";
-    row.innerHTML =
-      '<input type="text" name="sig_name" placeholder="Namn" class="form-control" style="display:inline-block;width:55%" />' +
-      ' <input type="text" name="sig_role" value="Styrelseledamot" placeholder="Roll" class="form-control" style="display:inline-block;width:35%" />' +
-      ' <button type="button" class="btn btn-outline btn-sm" onclick="this.parentElement.remove()">✕</button>';
-    document.getElementById("sig-rows").appendChild(row);
-  }
-</script>
 {% endblock %}

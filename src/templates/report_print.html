@@ -2,7 +2,7 @@
 <html lang="sv">
   <head>
     <meta charset="utf-8" />
-    <title>Årsredovisning – {{ sie.company.name }}</title>
+    <title>Årsredovisning – {{ report_state.company_name }}</title>
     <style>
       @page {
         size: a4 portrait;
@@ -83,11 +83,16 @@
         padding-left: 40px;
       }
 
-      .sig-line {
+      .sig-table {
+        width: 220px;
+        margin-top: 40px;
+        margin-bottom: 4px;
+        border-collapse: collapse;
+      }
+      .sig-cell {
         border-bottom: 1px solid #333;
-        height: 30px;
-        width: 200px;
-        margin-top: 30px;
+        height: 56px;
+        padding: 0;
       }
       .role {
         font-style: italic;
@@ -105,17 +110,31 @@
       .page-break {
         page-break-before: always;
       }
+      .eq-table {
+        font-size: 9px;
+        table-layout: fixed;
+        width: 100%;
+      }
+      .eq-table th,
+      .eq-table td {
+        padding: 3px 4px;
+      }
+      .eq-table th.eq-header {
+        white-space: normal;
+        word-wrap: break-word;
+        font-size: 8.5px;
+      }
     </style>
   </head>
   <body>
     <div class="cover">
       <h1>Årsredovisning</h1>
-      <h2>{{ sie.company.name }}</h2>
-      <p class="org-number">Org.nr {{ sie.company.org_number }}</p>
-      {% if sie.company.fiscal_year_start and sie.company.fiscal_year_end %}
+      <h2>{{ report_state.company_name }}</h2>
+      <p class="org-number">Org.nr {{ report_state.org_number }}</p>
+      {% if report_state.fiscal_year_start and report_state.fiscal_year_end %}
       <p>
-        Räkenskapsåret {{ sie.company.fiscal_year_start.isoformat() }} – {{
-        sie.company.fiscal_year_end.isoformat() }}
+        Räkenskapsåret {{ report_state.fiscal_year_start }} – {{
+        report_state.fiscal_year_end }}
       </p>
       {% endif %}
     </div>
@@ -171,7 +190,7 @@
     <h3>Resultatdisposition</h3>
     {% if mgmt_report.profit_disposition_text %}
     <p>{{ mgmt_report.profit_disposition_text }}</p>
-    {% else %}
+    {% endif %}
     <p>Styrelsen föreslår att till förfogande stående medel:</p>
     <table>
       <tr>
@@ -186,13 +205,32 @@
         <td>Summa</td>
         <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.available_funds).replace(",", "\u00a0") }} kr</td>
       </tr>
+    </table>
+    <p>disponeras enligt följande:</p>
+    <table>
+      {% if mgmt_report.profit_disposition.dividend %}
+      <tr>
+        <td>Utdelning till aktieägare</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.dividend).replace(",", "\u00a0") }} kr</td>
+      </tr>
+      {% endif %}
+      {% if mgmt_report.profit_disposition.to_reserve_fund %}
+      <tr>
+        <td>Avsättning till reservfond</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.to_reserve_fund).replace(",", "\u00a0") }} kr</td>
+      </tr>
+      {% endif %}
       <tr>
         <td>I ny räkning överförs</td>
         <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.carried_forward).replace(",", "\u00a0") }} kr</td>
       </tr>
+      <tr class="sum-row">
+        <td>Summa</td>
+        <td class="amount">{{ "{:,.0f}".format(mgmt_report.profit_disposition.total_distributed).replace(",", "\u00a0") }} kr</td>
+      </tr>
     </table>
-    {% endif %}
 
+    <div class="page-break"></div>
     <h2>Resultaträkning</h2>
     <table>
       <tr>
@@ -209,6 +247,7 @@
       {% endfor %}
     </table>
 
+    <div class="page-break"></div>
     <h2>Balansräkning</h2>
     <h3>Tillgångar</h3>
     <table>
@@ -244,40 +283,28 @@
 
     {% if equity_changes %}
     <h2>Förändringar i eget kapital</h2>
-    <table>
+    <table class="eq-table">
       <tr>
-        <th>&#160;</th>
-        {% for col in equity_changes.columns %}
-        <th class="amount">{{ col.label }}</th>
-        {% endfor %}
-        <th class="amount">Totalt</th>
+        <th width="34%">&#160;</th>
+        <th class="amount" width="16%">Belopp vid<br/>årets ingång</th>
+        <th class="amount" width="16%">Disposition<br/>enl. stämma</th>
+        <th class="amount" width="16%">Årets<br/>resultat</th>
+        <th class="amount" width="18%">Belopp vid<br/>årets utgång</th>
       </tr>
+      {% for col in equity_changes.columns %}
       <tr>
-        <td>Belopp vid årets ingång</td>
-        {% for col in equity_changes.columns %}
+        <td>{{ col.label }}</td>
         <td class="amount">{{ "{:,.0f}".format(col.opening).replace(",", "\u00a0") }}</td>
-        {% endfor %}
-        <td class="amount">{{ "{:,.0f}".format(equity_changes.total_opening).replace(",", "\u00a0") }}</td>
-      </tr>
-      <tr>
-        <td>Disposition enl. årsstämma</td>
-        {% for col in equity_changes.columns %}
-        <td class="amount">{% if col.appropriation %}{{ "{:,.0f}".format(col.appropriation).replace(",", "\u00a0") }}{% endif %}</td>
-        {% endfor %}
-        <td class="amount">0</td>
-      </tr>
-      <tr>
-        <td>Årets resultat</td>
-        {% for col in equity_changes.columns %}
-        <td class="amount">{% if col.annual_result %}{{ "{:,.0f}".format(col.annual_result).replace(",", "\u00a0") }}{% endif %}</td>
-        {% endfor %}
-        <td class="amount">{{ "{:,.0f}".format(equity_changes.total_annual_result).replace(",", "\u00a0") }}</td>
-      </tr>
-      <tr class="sum-row">
-        <td>Belopp vid årets utgång</td>
-        {% for col in equity_changes.columns %}
+        <td class="amount">{% if col.appropriation %}{{ "{:,.0f}".format(col.appropriation).replace(",", "\u00a0") }}{% else %}0{% endif %}</td>
+        <td class="amount">{% if col.annual_result %}{{ "{:,.0f}".format(col.annual_result).replace(",", "\u00a0") }}{% else %}0{% endif %}</td>
         <td class="amount">{{ "{:,.0f}".format(col.closing).replace(",", "\u00a0") }}</td>
-        {% endfor %}
+      </tr>
+      {% endfor %}
+      <tr class="sum-row">
+        <td>Totalt</td>
+        <td class="amount">{{ "{:,.0f}".format(equity_changes.total_opening).replace(",", "\u00a0") }}</td>
+        <td class="amount">0</td>
+        <td class="amount">{{ "{:,.0f}".format(equity_changes.total_annual_result).replace(",", "\u00a0") }}</td>
         <td class="amount">{{ "{:,.0f}".format(equity_changes.total_closing).replace(",", "\u00a0") }}</td>
       </tr>
     </table>
@@ -301,6 +328,7 @@
     </table>
     {% endif %}
 
+    <div class="page-break"></div>
     <h2>Noter</h2>
     {% for note in notes.items %}
     <div class="note">
@@ -321,12 +349,40 @@
     </div>
     {% endfor %}
 
+    <div class="page-break"></div>
     <h2>Underskrifter</h2>
-    <p>{{ sie.company.address_postal }}, den ____________________</p>
+    <p>{{ report_state.signing_location or 'Ort ej angiven' }}, {{ report_state.prepared_date or 'datum saknas' }}</p>
     {% for sig in signatures %}
-    <div class="sig-line"></div>
+    <table class="sig-table"><tr><td class="sig-cell">&#160;</td></tr></table>
     <p>{{ sig.name }}</p>
     <p class="role">{{ sig.role }}</p>
+    {% if sig.signed_date %}
+    <p>{{ sig.signed_date }}</p>
+    {% endif %}
     {% endfor %}
+
+    <div class="page-break"></div>
+    <h2>Faststallelseintyg</h2>
+    <p>
+      Undertecknad styrelseledamot intygar härmed att resultaträkningen och
+      balansräkningen för {{ report_state.company_name or 'bolaget' }}
+      (org.nr {{ report_state.org_number or '–' }}) har fastställts på
+      årsstämma den {{ report_state.agm_date or '[datum saknas]' }}.
+    </p>
+    {% if report_state.faststallelse_disposition_choice == 'annan' and report_state.faststallelse_disposition_text %}
+    <p>Stämman beslutade om följande disposition: {{ report_state.faststallelse_disposition_text }}</p>
+    {% else %}
+    <p>Stämman beslutade att bolagets resultat behandlas enligt förslaget i förvaltningsberättelsen.</p>
+    {% endif %}
+    <p>
+      Årsredovisningen är upprättad i enlighet med årsredovisningslagen och
+      {{ 'BFNAR 2016:10 (K2)' if framework == 'K2' else 'BFNAR 2012:1 (K3)' }}.
+    </p>
+    <table class="sig-table"><tr><td class="sig-cell">&#160;</td></tr></table>
+    <p>{{ report_state.certifier_name or '[Namn]' }}</p>
+    <p class="role">{{ report_state.certifier_role }}</p>
+    {% if report_state.certifier_date %}
+    <p>{{ report_state.certifier_date }}</p>
+    {% endif %}
   </body>
 </html>

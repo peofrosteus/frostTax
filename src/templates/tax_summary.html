@@ -36,7 +36,7 @@
         </thead>
         <tbody>
             {% for tf in tax_calc.fields %}
-            <tr class="{% if tf.field_id in ['1.1', '1.2'] %}sum-row{% endif %}">
+            <tr class="{% if tf.field_id in ['1.1', '1.2'] %}sum-row{% endif %}{% if tf.amount == 0 and tf.field_id not in ['1.1', '1.2'] %} zero-row{% endif %}">
                 <td><strong>{{ tf.field_id }}</strong></td>
                 <td>{{ tf.label }}</td>
                 <td class="amount">{{ "{:,.0f}".format(tf.amount).replace(",", " ") }}</td>
@@ -61,7 +61,7 @@
     <h3>INK2R – Räkenskapsschema (fält 2.1–2.50, 3.1–3.27)</h3>
 
     {% set current_section = {'name': ''} %}
-    {% for f in sru_fields %}
+    {% for f in ink2r_fields %}
         {% if f.section != current_section.name %}
             {% if current_section.name %}
                 </tbody></table>
@@ -79,14 +79,14 @@
                 </thead>
                 <tbody>
         {% endif %}
-        <tr>
+        <tr{% if f.amount == 0 %} class="zero-row"{% endif %}>
             <td><strong>{{ f.ink2_field }}</strong></td>
             <td><code>{{ f.sru_code }}</code></td>
             <td>{{ f.label }}</td>
             <td class="amount">{{ "{:,.0f}".format(f.amount).replace(",", " ") }}</td>
         </tr>
     {% endfor %}
-    {% if sru_fields %}
+    {% if ink2r_fields %}
         </tbody></table>
     {% endif %}
 
@@ -104,7 +104,7 @@
         </thead>
         <tbody>
             {% for sf in ink2s.fields %}
-            <tr class="{% if sf.field_id in ['4.15', '4.16'] %}sum-row{% endif %}{% if sf.field_id.startswith('4.17') or sf.field_id.startswith('4.18') or sf.field_id.startswith('4.19') or sf.field_id.startswith('4.20') or sf.field_id.startswith('4.21') or sf.field_id.startswith('4.22') %} info-row{% endif %}">
+            <tr class="{% if sf.field_id in ['4.15', '4.16'] %}sum-row{% endif %}{% if sf.field_id.startswith('4.17') or sf.field_id.startswith('4.18') or sf.field_id.startswith('4.19') or sf.field_id.startswith('4.20') or sf.field_id.startswith('4.21') or sf.field_id.startswith('4.22') %} info-row{% endif %}{% if sf.amount == 0 and sf.field_id not in ['4.15', '4.16'] %} zero-row{% endif %}">
                 <td><strong>{{ sf.field_id }}</strong></td>
                 <td>{{ sf.label }}</td>
                 <td class="amount">{{ sf.sign }}</td>

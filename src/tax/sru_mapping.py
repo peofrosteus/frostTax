@@ -145,8 +145,8 @@ SRU_TO_INK2: dict[str, tuple[str, str, str]] = {
 }
 
 
-def aggregate_sru(sie: SieFile) -> list[SruField]:
-    """Aggregate account balances by SRU code and map to INK2 fields."""
+def _compute_sru_totals(sie: SieFile, include_zero: bool = False) -> dict[str, Decimal]:
+    """Sum balances per SRU code from SIE. include_zero=True keeps codes that net to zero."""
     sru_totals: dict[str, Decimal] = {}
 
     # For balance sheet accounts (1000-2999): use UB
@@ -165,11 +165,22 @@ def aggregate_sru(sie: SieFile) -> list[SruField]:
         else:
             amount = sie.get_result(account_num, 0)
 
-        if amount == 0:
+        if amount == 0 and not include_zero:
             continue
 
         sru_code = account.sru_code
         sru_totals[sru_code] = sru_totals.get(sru_code, Decimal(0)) + amount
+
+    return sru_totals
+
+
+def aggregate_sru(sie: SieFile) -> list[SruField]:
+    """Aggregate account balances by SRU code and map to INK2 fields.
+
+    Returns only fields with non-zero amounts (used for SRU file generation).
+    For a complete display table see :func:`build_complete_ink2r_table`.
+    """
+    sru_totals = _compute_sru_totals(sie, include_zero=False)
 
     # Map to INK2 fields
     fields: list[SruField] = []
@@ -197,3 +208,53 @@ def aggregate_sru(sie: SieFile) -> list[SruField]:
             ))
 
     return fields
+
+
+def _ink2_field_sort_key(field_id: str) -> tuple[int, int]:
+    """Sort key for INK2 field IDs like '2.1', '2.50', '3.27'."""
+    major, _, minor = field_id.partition(".")
+    try:
+        return (int(major), int(minor))
+    except ValueError:
+        return (99, 0)
+
+
+def build_complete_ink2r_table(sie: SieFile) -> list[SruField]:
+    """Return all INK2R fields (2.1–2.50, 3.1–3.27) including those with zero amount.
+
+    Used for the deklarationsunderlag display so the table mirrors the structure
+    of the official INK2R blankett. Multiple SRU codes mapping to the same INK2
+    field are summed into one row.
+    """
+    sru_totals = _compute_sru_totals(sie, include_zero=False)
+
+    # Group SRU codes by INK2 field (only 2.x and 3.x)
+    field_groups: dict[str, dict] = {}
+    for sru_code, (ink2_field, label, section) in SRU_TO_INK2.items():
+        if not (ink2_field.startswith("2.") or ink2_field.startswith("3.")):
+            continue
+        bucket = field_groups.setdefault(ink2_field, {
+            "sru_codes": [],
+            "label": label,
+            "section": section,
+        })
+        bucket["sru_codes"].append(sru_code)
+
+    # Build rows
+    rows: list[SruField] = []
+    for ink2_field in sorted(field_groups, key=_ink2_field_sort_key):
+        info = field_groups[ink2_field]
+        total = sum(
+            (sru_totals.get(code, Decimal(0)) for code in info["sru_codes"]),
+            Decimal(0),
+        )
+        if ink2_field.startswith("3."):
+            total = abs(total)
+        rows.append(SruField(
+            sru_code=", ".join(info["sru_codes"]),
+            ink2_field=ink2_field,
+            label=info["label"],
+            amount=total,
+            section=info["section"],
+        ))
+    return rows
