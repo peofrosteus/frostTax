@@ -22,7 +22,6 @@ from src.financial.income_statement import generate_income_statement
 from src.financial.balance_sheet import generate_balance_sheet
 from src.financial.management_report import generate_management_report, ManagementReport
 from src.financial.notes import generate_notes
-from src.financial.cash_flow import generate_cash_flow
 from src.financial.equity_changes import generate_equity_changes
 from src.financial.reporting_workspace import (
     ReportState,
@@ -140,10 +139,9 @@ def report(file_id: str):
         flash("Filen har gått ut. Ladda upp igen.", "error")
         return redirect(url_for("index"))
 
-    framework = request.args.get("framework", "K2")
     active_section = request.args.get("section", "grunduppgifter")
-    income_stmt = generate_income_statement(sie, framework=framework)
-    balance = generate_balance_sheet(sie, framework=framework)
+    income_stmt = generate_income_statement(sie)
+    balance = generate_balance_sheet(sie)
     report_state = _get_report_state(sie, file_id)
     mgmt_report = generate_management_report(
         sie,
@@ -156,13 +154,10 @@ def report(file_id: str):
         disposition_to_reserve_fund=report_state.disposition_to_reserve_fund,
         disposition_to_new_account=report_state.disposition_to_new_account,
     )
-    notes = generate_notes(sie, framework=framework)
+    notes = generate_notes(sie)
     apply_report_state_to_notes(notes, report_state)
 
-    # Förändringar i eget kapital krävs både för K2 (i förvaltningsberättelsen)
-    # och K3 (BFNAR 2012:1 kap 6). Kassaflödesanalys är bara K3-krav.
     equity_chg = generate_equity_changes(sie)
-    cash_flow = generate_cash_flow(sie) if framework == "K3" else None
     compliance_items = build_compliance_items(
         report_state,
         balance,
@@ -180,11 +175,9 @@ def report(file_id: str):
         balance=balance,
         mgmt_report=mgmt_report,
         notes=notes,
-        cash_flow=cash_flow,
         equity_changes=equity_chg,
         compliance_items=compliance_items,
         active_section=active_section,
-        framework=framework,
         file_id=file_id,
         filename=_file_names.get(file_id, ""),
         edits=_mgmt_edits.get(file_id, {}),
@@ -201,12 +194,11 @@ def update_report_workspace(file_id: str):
         return redirect(url_for("index"))
 
     section = request.form.get("section", "grunduppgifter")
-    framework = request.form.get("framework", "K2")
     state = _get_report_state(sie, file_id)
-    notes = generate_notes(sie, framework=framework)
+    notes = generate_notes(sie)
     update_report_state(state, section, request.form, notes)
     flash("Arbetsytan har uppdaterats.", "success")
-    return redirect(url_for("report", file_id=file_id, framework=framework, section=section))
+    return redirect(url_for("report", file_id=file_id, section=section))
 
 
 @app.route("/report/<file_id>/edit", methods=["POST"])
@@ -272,9 +264,8 @@ def report_pdf(file_id: str):
         flash("Filen har gått ut. Ladda upp igen.", "error")
         return redirect(url_for("index"))
 
-    framework = request.args.get("framework", "K2")
-    income_stmt = generate_income_statement(sie, framework=framework)
-    balance = generate_balance_sheet(sie, framework=framework)
+    income_stmt = generate_income_statement(sie)
+    balance = generate_balance_sheet(sie)
     report_state = _get_report_state(sie, file_id)
     mgmt_report = generate_management_report(
         sie,
@@ -287,11 +278,10 @@ def report_pdf(file_id: str):
         disposition_to_reserve_fund=report_state.disposition_to_reserve_fund,
         disposition_to_new_account=report_state.disposition_to_new_account,
     )
-    notes = generate_notes(sie, framework=framework)
+    notes = generate_notes(sie)
     apply_report_state_to_notes(notes, report_state)
 
     equity_chg = generate_equity_changes(sie)
-    cash_flow = generate_cash_flow(sie) if framework == "K3" else None
 
     html = render_template(
         "report_print.html",
@@ -300,9 +290,7 @@ def report_pdf(file_id: str):
         balance=balance,
         mgmt_report=mgmt_report,
         notes=notes,
-        cash_flow=cash_flow,
         equity_changes=equity_chg,
-        framework=framework,
         report_state=report_state,
         signatures=report_state.signatures,
     )

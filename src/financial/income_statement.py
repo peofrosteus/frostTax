@@ -1,6 +1,6 @@
-"""Income statement (Resultaträkning) generation.
+"""Income statement (Resultaträkning) generation per K2 (BFNAR 2016:10).
 
-Supports K2 cost-by-nature (kostnadsslagsindelad) and K3 with additional detail.
+Cost-by-nature classification (kostnadsslagsindelad).
 """
 
 from __future__ import annotations
@@ -56,7 +56,6 @@ class IncomeStatement:
 def generate_income_statement(
     sie: SieFile,
     year_offset: int = 0,
-    framework: str = "K2",
 ) -> IncomeStatement:
     """Generate an income statement from SIE data.
 

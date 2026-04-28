@@ -21,38 +21,19 @@ class Notes:
     items: list[Note] = field(default_factory=list)
 
 
-def generate_notes(sie: SieFile, framework: str = "K2") -> Notes:
-    """Generate notes for the annual report."""
+def generate_notes(sie: SieFile) -> Notes:
+    """Generate notes for the annual report (K2)."""
     notes = Notes()
     note_num = 1
 
     # Not 1: Redovisningsprinciper
-    if framework == "K2":
-        content = (
-            "Årsredovisningen har upprättats i enlighet med årsredovisningslagen "
-            "och Bokföringsnämndens allmänna råd (BFNAR 2016:10) om årsredovisning "
-            "i mindre företag (K2).\n\n"
-            "Intäkter redovisas till verkligt värde av vad som erhållits eller kommer "
-            "att erhållas."
-        )
-    else:
-        content = (
-            "Årsredovisningen har upprättats i enlighet med årsredovisningslagen "
-            "och Bokföringsnämndens allmänna råd (BFNAR 2012:1) om årsredovisning "
-            "och koncernredovisning (K3).\n\n"
-            "Intäktsredovisning\n"
-            "Intäkter redovisas till verkligt värde av vad som erhållits eller kommer "
-            "att erhållas. Intäkter från tjänsteuppdrag redovisas i den period arbetet utförs.\n\n"
-            "Fordringar\n"
-            "Fordringar redovisas till det belopp som förväntas inflyta efter individuell bedömning.\n\n"
-            "Anläggningstillgångar\n"
-            "Materiella och immateriella anläggningstillgångar redovisas till anskaffningsvärde "
-            "minskat med ackumulerade avskrivningar och eventuella nedskrivningar. "
-            "Avskrivning sker linjärt över tillgångens bedömda nyttjandeperiod.\n\n"
-            "Kassaflödesanalys\n"
-            "Kassaflödesanalysen upprättas enligt indirekt metod. Det redovisade kassaflödet "
-            "omfattar endast transaktioner som medför in- eller utbetalningar."
-        )
+    content = (
+        "Årsredovisningen har upprättats i enlighet med årsredovisningslagen "
+        "och Bokföringsnämndens allmänna råd (BFNAR 2016:10) om årsredovisning "
+        "i mindre företag (K2).\n\n"
+        "Intäkter redovisas till verkligt värde av vad som erhållits eller kommer "
+        "att erhållas."
+    )
     notes.items.append(Note(number=note_num, title="Redovisnings- och värderingsprinciper", content=content))
     note_num += 1
 

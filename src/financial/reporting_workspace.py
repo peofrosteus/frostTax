@@ -246,7 +246,7 @@ def build_compliance_items(
         ComplianceItem(
             key="equity-changes",
             title="Förändringar i eget kapital",
-            description="Specifikation av förändringar i eget kapital krävs (K2 4.7 / K3 kap 6).",
+            description="Specifikation av förändringar i eget kapital krävs (K2 4.7).",
             status=(
                 "complete"
                 if equity_changes is not None and equity_changes.columns

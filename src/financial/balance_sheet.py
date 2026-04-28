@@ -1,7 +1,4 @@
-"""Balance sheet (Balansräkning) generation.
-
-Generates a balance sheet following K2/K3 structure based on UB (closing balances).
-"""
+"""Balance sheet (Balansräkning) generation per K2 (BFNAR 2016:10) based on UB (closing balances)."""
 
 from __future__ import annotations
 
@@ -48,7 +45,6 @@ class BalanceSheet:
 def generate_balance_sheet(
     sie: SieFile,
     year_offset: int = 0,
-    framework: str = "K2",
 ) -> BalanceSheet:
     """Generate a balance sheet from SIE data.
 

@@ -12,7 +12,7 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
 
   <div class="report-actions workspace-actions">
     <a
-      href="{{ url_for('report_pdf', file_id=file_id, framework=framework) }}"
+      href="{{ url_for('report_pdf', file_id=file_id) }}"
       class="btn btn-primary"
       >Ladda ner PDF</a
     >
@@ -21,19 +21,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
       class="btn btn-secondary"
       >SRU och deklarationsunderlag</a
     >
-    {% if framework == 'K2' %}
-    <a
-      href="{{ url_for('report', file_id=file_id, framework='K3', section=active_section) }}"
-      class="btn btn-outline"
-      >Byt till K3</a
-    >
-    {% else %}
-    <a
-      href="{{ url_for('report', file_id=file_id, framework='K2', section=active_section) }}"
-      class="btn btn-outline"
-      >Byt till K2</a
-    >
-    {% endif %}
   </div>
 </div>
 
@@ -55,7 +42,7 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         ] %}
         {% for tab_id, tab_label in tabs %}
         <a
-          href="{{ url_for('report', file_id=file_id, framework=framework, section=tab_id) }}"
+          href="{{ url_for('report', file_id=file_id, section=tab_id) }}"
           class="section-tab {% if active_section == tab_id %}is-active{% endif %}"
           >{{ tab_label }}</a
         >
@@ -69,7 +56,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         class="editor-form"
       >
         <input type="hidden" name="section" value="grunduppgifter" />
-        <input type="hidden" name="framework" value="{{ framework }}" />
 
         <div class="form-grid two-columns">
           <div class="form-group">
@@ -178,7 +164,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         class="editor-form"
       >
         <input type="hidden" name="section" value="forvaltningsberattelse" />
-        <input type="hidden" name="framework" value="{{ framework }}" />
 
         <div class="form-group">
           <label for="business_description">Verksamhetsbeskrivning</label>
@@ -288,7 +273,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         class="editor-form"
       >
         <input type="hidden" name="section" value="noter" />
-        <input type="hidden" name="framework" value="{{ framework }}" />
 
         <div class="stacked-note-editor">
           {% for note in notes.items %}
@@ -325,7 +309,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         class="editor-form"
       >
         <input type="hidden" name="section" value="underskrifter" />
-        <input type="hidden" name="framework" value="{{ framework }}" />
 
         <div class="form-grid two-columns">
           <div class="form-group">
@@ -430,7 +413,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         class="editor-form"
       >
         <input type="hidden" name="section" value="faststallelseintyg" />
-        <input type="hidden" name="framework" value="{{ framework }}" />
 
         <div class="form-grid two-columns">
           <div class="form-group">
@@ -552,7 +534,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         </p>
         {% endif %}
         <div class="cover-meta">
-          <span class="framework-badge">{{ framework }}</span>
           <span class="framework-badge neutral"
             >{{ report_state.accounting_currency }}</span
           >
@@ -885,48 +866,6 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
           </tbody>
         </table>
       </section>
-      {% endif %} {% if cash_flow %}
-      <section class="report-section">
-        <h2>Kassaflödesanalys</h2>
-        <table class="data-table financial-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th class="amount">
-                {{ report_state.fiscal_year_end[:4] if
-                report_state.fiscal_year_end else 'Aktuellt år' }}
-              </th>
-              {% if sie.has_previous_year %}
-              <th class="amount">
-                {{ report_state.previous_year_end[:4] if
-                report_state.previous_year_end else
-                sie.company.prev_fiscal_year_end.year }}
-              </th>
-              {% endif %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for line in cash_flow.lines %}
-            <tr
-              class="{% if line.is_sum %}sum-row{% endif %} indent-{{ line.indent }}"
-            >
-              <td>{{ line.label }}</td>
-              <td class="amount">
-                {% if not line.is_sum or line.amount != 0 %}{{
-                "{:,.0f}".format(line.amount).replace(",", " ") }}{% endif %}
-              </td>
-              {% if sie.has_previous_year %}
-              <td class="amount">
-                {% if not line.is_sum or line.previous_amount != 0 %}{{
-                "{:,.0f}".format(line.previous_amount).replace(",", " ") }}{%
-                endif %}
-              </td>
-              {% endif %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </section>
       {% endif %}
 
       <section class="report-section" id="notes">
@@ -991,7 +930,7 @@ report_state.company_name }} – frostTax{% endblock %} {% block content %}
         {% endif %}
         <p>
           Årsredovisningen är upprättad i enlighet med årsredovisningslagen och
-          {{ 'BFNAR 2016:10 (K2)' if framework == 'K2' else 'BFNAR 2012:1 (K3)' }}.
+          BFNAR 2016:10 (K2).
         </p>
         <div class="signature-grid">
           <div class="signature-box">

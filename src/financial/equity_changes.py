@@ -1,6 +1,6 @@
 """Equity changes report (Förändringar i eget kapital).
 
-Required by K3 (BFNAR 2012:1 kap 6) for all companies.
+Required by K2 (BFNAR 2016:10 punkt 4.7) – visas i förvaltningsberättelsen.
 Shows movements in each equity component during the fiscal year.
 """
 

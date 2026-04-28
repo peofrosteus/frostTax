@@ -310,24 +310,6 @@
     </table>
     {% endif %}
 
-    {% if cash_flow %}
-    <h2>Kassaflödesanalys</h2>
-    <table>
-      <tr>
-        <th>&#160;</th>
-        <th class="amount">{{ sie.company.fiscal_year_end.year if sie.company.fiscal_year_end else '' }}</th>
-        {% if sie.has_previous_year %}<th class="amount">{{ sie.company.prev_fiscal_year_end.year }}</th>{% endif %}
-      </tr>
-      {% for line in cash_flow.lines %}
-      <tr{% if line.is_sum %} class="sum-row"{% endif %}>
-        <td{% if line.indent == 1 %} class="indent-1"{% elif line.indent == 2 %} class="indent-2"{% endif %}>{{ line.label }}</td>
-        <td class="amount">{% if not line.is_sum or line.amount != 0 %}{{ "{:,.0f}".format(line.amount).replace(",", "\u00a0") }}{% endif %}</td>
-        {% if sie.has_previous_year %}<td class="amount">{% if not line.is_sum or line.previous_amount != 0 %}{{ "{:,.0f}".format(line.previous_amount).replace(",", "\u00a0") }}{% endif %}</td>{% endif %}
-      </tr>
-      {% endfor %}
-    </table>
-    {% endif %}
-
     <div class="page-break"></div>
     <h2>Noter</h2>
     {% for note in notes.items %}
@@ -376,7 +358,7 @@
     {% endif %}
     <p>
       Årsredovisningen är upprättad i enlighet med årsredovisningslagen och
-      {{ 'BFNAR 2016:10 (K2)' if framework == 'K2' else 'BFNAR 2012:1 (K3)' }}.
+      BFNAR 2016:10 (K2).
     </p>
     <table class="sig-table"><tr><td class="sig-cell">&#160;</td></tr></table>
     <p>{{ report_state.certifier_name or '[Namn]' }}</p>
