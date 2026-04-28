@@ -5,6 +5,7 @@ SIE → Årsredovisning & Deklaration för svenska aktiebolag.
 Webbapp som tar en SIE4-fil (exporterad från t.ex. Fortnox, Visma, Björn Lundén) och genererar:
 
 - **Årsredovisning** (HTML + PDF) enligt K2 eller K3
+- **Faststallelseintyg** för stämmans fastställelse av räkenskaperna
 - **Deklarationsunderlag** (INK2) med SRU-fältmappning
 - **SRU-filer** (INFO.SRU + BLANKETTER.SRU) för digital inlämning till Skatteverket
 
@@ -21,11 +22,17 @@ python -m src.app
 ## Användning
 
 1. Ladda upp en SIE4-fil (.se / .si / .sie) via webbformuläret, eller klicka på en lokal fil i `sieFiles/`
-2. Granska årsredovisningen (förvaltningsberättelse, resultaträkning, balansräkning, noter)
-3. Redigera förvaltningsberättelsen (verksamhetsbeskrivning, väsentliga händelser, resultatdisposition) via "Redigera"-knappen
-4. Byt mellan K2/K3 med knappen i rapporthuvudet
-5. Ladda ner PDF för inlämning till Bolagsverket
-6. Gå till deklarationsunderlaget för att se INK2-fält och ladda ner SRU-filerna (zip)
+2. Arbeta i den uppdelade redigeringsvyn (editor till vänster, levande förhandsgranskning till höger)
+3. Fyll i sektionerna i tur och ordning via flikarna:
+   - **Grunduppgifter** – företagsnamn, org.nr, säte, räkenskapsår, redovisningsvaluta, vem som avger årsredovisningen
+   - **Förvaltningsberättelse** – verksamhetsbeskrivning, väsentliga händelser, framtidsutsikter, fri text för resultatdisposition + strukturerade fält (utdelning, avsättning till reservfond, i ny räkning)
+   - **Noter** – redigera/komplettera nottexter (innehållet rendereras direkt i förhandsgranskningen)
+   - **Underskrifter** – ort, färdigställandedatum, dynamiskt antal underskrifter (minst 1; lägg till/ta bort vid behov)
+   - **Faststallelseintyg** – datum för årsstämma, beslut om resultatdisposition, intygets undertecknare
+4. Kontrollistan under editorn visar formkrav och varnar om något saknas (se *Formkrav* nedan)
+5. Byt mellan K2/K3 med knappen i toppraden
+6. Ladda ner PDF för inlämning till Bolagsverket
+7. Gå till deklarationsunderlaget för att se hela INK2/INK2R/INK2S och ladda ner SRU-filerna (zip)
 
 ## Årsredovisning
 
@@ -33,24 +40,45 @@ Genereras enligt ÅRL (1995:1554) och valbart regelverk:
 
 ### K2 (BFNAR 2016:10)
 
-- Förvaltningsberättelse med bolagets säte, verksamhetsbeskrivning, flerårsöversikt och strukturerad resultatdisposition
-- Resultaträkning (kostnadsslagsindelad)
-- Balansräkning
-- Noter (redovisningsprinciper, anställda, ställda säkerheter m.m.)
+- **Förvaltningsberättelse** med bolagets säte, verksamhetsbeskrivning, väsentliga händelser, framtidsutsikter, flerårsöversikt och strukturerad resultatdisposition
+- **Resultaträkning** (kostnadsslagsindelad)
+- **Balansräkning**
+- **Förändringar i eget kapital** (K2 4.7) – aktiekapital, balanserat resultat, årets resultat med ingående/utgående saldon
+- **Noter** (redovisningsprinciper, anställda, ställda säkerheter m.m.)
+- **Underskrifter** med valfritt antal styrelsepersoner
+- **Faststallelseintyg** på egen sida
 
 ### K3 (BFNAR 2012:1)
 
 Allt ovan plus:
 
 - **Kassaflödesanalys** (indirekt metod)
-- **Förändringar i eget kapital**
 - Utökade redovisningsprinciper i noterna (intäktsredovisning, fordringar, anläggningstillgångar, kassaflödesmetod)
 
 ### Jämförelsetal
 
 Om SIE-filen innehåller föregående räkenskapsår (`#RAR -1`) visas jämförelsekolumner automatiskt i alla rapporter samt flerårsöversikten.
 
-## SRU-filer
+### PDF-layout
+
+PDF-export bryter sidor mellan varje huvudsektion: försättsblad → förvaltningsberättelse → resultaträkning → balansräkning → noter → underskrifter → faststallelseintyg. Underskriftslinje rendereras med ~56 px höjd för fysisk signatur ovanför namnförtydligandet.
+
+## Formkrav (compliance)
+
+Editorn visar en levande kontrollista som flaggar saknade formkrav. Kontrollerna baseras på K2/K3-kraven samt Gredors checklista och täcker bl.a.:
+
+- Grunduppgifter (företagsnamn, org.nr, räkenskapsår)
+- Bolagets säte
+- Verksamhetsbeskrivning
+- Att noter har innehåll eller tabell
+- **Balanskontroll** – tillgångar = eget kapital + skulder
+- **Resultatdisposition balanserar** – utdelning + reservfond + ny räkning summerar till fritt eget kapital
+- **Förändringar i eget kapital** – sektion finns
+- Underskrifter (minst en med namn och datum)
+- Datering ≤ tidigaste underskrift
+- Faststallelseintyg (årsstämmodatum, intygare, datumordning AGM ≥ färdigställdes)
+
+## SRU-filer & deklarationsunderlag
 
 SRU-filerna genereras i enlighet med Skatteverkets krav och har verifierats mot Skatteverkets officiella filöverföringstjänst:
 
@@ -59,31 +87,34 @@ SRU-filerna genereras i enlighet med Skatteverkets krav och har verifierats mot 
 
 Alla SRU-koder verifierade mot SKV 294, srufiler.se och BAS 2026.
 
+I webbgränssnittet visas **alla** INK2R- (2.1–2.50, 3.1–3.27) och INK2S-fält (4.1–4.22) i deklarationsunderlaget — även rader med belopp 0 listas (dämpade) så strukturen speglar den officiella blanketten. SRU-filerna i sig innehåller endast nollskilda fält enligt Skatteverkets format.
+
 ## Projektstruktur
 
 ```
 frostTax/
-├── sieFiles/                    # SIE-filer att bearbeta
+├── sieFiles/                       # SIE-filer att bearbeta
 ├── src/
-│   ├── app.py                   # Flask-webbapp
+│   ├── app.py                      # Flask-webbapp
 │   ├── sie_parser/
-│   │   ├── parser.py            # SIE4-parser (hanterar PC8/CP437)
-│   │   └── models.py            # Datamodeller
+│   │   ├── parser.py               # SIE4-parser (hanterar PC8/CP437)
+│   │   └── models.py               # Datamodeller
 │   ├── financial/
-│   │   ├── income_statement.py  # Resultaträkning
-│   │   ├── balance_sheet.py     # Balansräkning
-│   │   ├── management_report.py # Förvaltningsberättelse
-│   │   ├── notes.py             # Noter
-│   │   ├── cash_flow.py         # Kassaflödesanalys (K3)
-│   │   └── equity_changes.py    # Förändringar i eget kapital (K3)
+│   │   ├── income_statement.py     # Resultaträkning
+│   │   ├── balance_sheet.py        # Balansräkning
+│   │   ├── management_report.py    # Förvaltningsberättelse + strukturerad resultatdisposition
+│   │   ├── notes.py                # Noter
+│   │   ├── cash_flow.py            # Kassaflödesanalys (K3)
+│   │   ├── equity_changes.py       # Förändringar i eget kapital (K2 + K3)
+│   │   └── reporting_workspace.py  # ReportState + compliance-checklista
 │   ├── tax/
-│   │   ├── sru_mapping.py       # BAS-konto → SRU-kod → INK2R-fält
-│   │   ├── sru_generator.py     # SRU-filgenerering (INFO + BLANKETTER)
-│   │   ├── ink2_tax_calc.py     # INK2 sida 1 (fält 1.1–1.16)
-│   │   └── ink2s_calc.py        # INK2S skattemässiga justeringar (4.1–4.22)
-│   ├── templates/               # Jinja2 HTML-templates
-│   └── static/                  # CSS
-├── tests/                       # pytest-tester (40 st)
+│   │   ├── sru_mapping.py          # BAS-konto → SRU-kod → INK2R-fält + komplett INK2R-tabell
+│   │   ├── sru_generator.py        # SRU-filgenerering (INFO + BLANKETTER)
+│   │   ├── ink2_tax_calc.py        # INK2 sida 1 (fält 1.1–1.16)
+│   │   └── ink2s_calc.py           # INK2S skattemässiga justeringar (4.1–4.22)
+│   ├── templates/                  # Jinja2 HTML-mallar (workspace + print)
+│   └── static/                     # CSS (Gredor-inspirerad palett)
+├── tests/                          # pytest-tester (49 st)
 └── requirements.txt
 ```
 
@@ -104,5 +135,6 @@ python -m pytest tests/ -v
 ## Avgränsningar
 
 - Stöder enbart **aktiebolag** (INK2). Enskild firma (NE) och handelsbolag (INK4) ingår inte.
-- Digital signering och automatisk inlämning till Bolagsverket/Skatteverket ingår inte.
+- Digital signering och automatisk inlämning till Bolagsverket/Skatteverket ingår inte (signering sker manuellt på utskriven PDF).
 - Anställningsuppgifter i noterna kräver manuell komplettering vid fler än 0 anställda.
+- Förhandsgranskningen i webbgränssnittet uppdateras vid spara, inte live medan användaren skriver.
