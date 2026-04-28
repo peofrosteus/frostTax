@@ -26,7 +26,17 @@ class ProfitDisposition:
     retained_earnings: Decimal = Decimal(0)  # Balanserat resultat
     annual_result: Decimal = Decimal(0)       # Årets resultat
     available_funds: Decimal = Decimal(0)     # Summa fritt eget kapital
+    dividend: Decimal = Decimal(0)            # Utdelning till aktieägare
+    to_reserve_fund: Decimal = Decimal(0)     # Avsättning till reservfond
     carried_forward: Decimal = Decimal(0)     # I ny räkning överförs
+
+    @property
+    def total_distributed(self) -> Decimal:
+        return self.dividend + self.to_reserve_fund + self.carried_forward
+
+    @property
+    def is_balanced(self) -> bool:
+        return self.total_distributed == self.available_funds
 
 
 @dataclass
@@ -55,6 +65,9 @@ def generate_management_report(
     significant_events: str = "",
     expected_future_development: str = "",
     profit_disposition_text: str = "",
+    disposition_dividend: str = "",
+    disposition_to_reserve_fund: str = "",
+    disposition_to_new_account: str = "",
 ) -> ManagementReport:
     """Generate a management report from SIE data."""
     report = ManagementReport()
@@ -111,16 +124,36 @@ def generate_management_report(
     # Structured profit disposition (K2 4.6)
     retained_earnings = -sie.sum_ub_range(2091, 2091) + (-sie.sum_ub_range(2098, 2098))
     available = retained_earnings + report.annual_result
+
+    dividend = _parse_amount(disposition_dividend)
+    to_reserve = _parse_amount(disposition_to_reserve_fund)
+    user_to_new = _parse_amount(disposition_to_new_account)
+    # Om användaren inte angett "i ny räkning" så fyller vi automatiskt så det balanserar
+    to_new = user_to_new if disposition_to_new_account.strip() else (available - dividend - to_reserve)
+
     report.profit_disposition = ProfitDisposition(
         retained_earnings=retained_earnings,
         annual_result=report.annual_result,
         available_funds=available,
-        carried_forward=available,
+        dividend=dividend,
+        to_reserve_fund=to_reserve,
+        carried_forward=to_new,
     )
 
     report.profit_disposition_text = profit_disposition_text
 
     return report
+
+
+def _parse_amount(value: str) -> Decimal:
+    """Parsa beloppssträng från formulärfält. Tom sträng → 0."""
+    if not value:
+        return Decimal(0)
+    cleaned = value.replace(" ", "").replace(" ", "").replace(",", ".")
+    try:
+        return Decimal(cleaned)
+    except (ArithmeticError, ValueError):
+        return Decimal(0)
 
 
 def _extract_city(postal: str) -> str:
