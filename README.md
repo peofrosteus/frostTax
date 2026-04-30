@@ -41,7 +41,27 @@ Genereras enligt ÅRL (1995:1554) och BFNAR 2016:10 (K2) – "Årsredovisning i 
 - **Resultaträkning** (kostnadsslagsindelad)
 - **Balansräkning**
 - **Förändringar i eget kapital** (K2 punkt 4.7) – aktiekapital, balanserat resultat, årets resultat med ingående/utgående saldon
-- **Noter** (redovisningsprinciper, anställda, ställda säkerheter m.m.)
+- **Noter** (auto-genereras från SIE per K2-taxonomi):
+  - Redovisnings- och värderingsprinciper
+  - Medelantal anställda
+  - Immateriella anläggningstillgångar – separat avskrivningstabell per kategori när saldon finns:
+    - Balanserade utgifter för utvecklingsarbeten (1010–1019, 7811)
+    - Koncessioner, patent, licenser, varumärken och liknande rättigheter (1020–1039, 7812–7815/7818–7819)
+    - Hyresrätter och liknande rättigheter (1040–1049/1060–1069, 7816)
+    - Goodwill (1050–1059, 7817)
+    - Förskott avseende immateriella anläggningstillgångar (1080–1099)
+  - Materiella anläggningstillgångar – separat avskrivningstabell per kategori när saldon finns:
+    - Byggnader och mark (1110–1119/1130–1199, 7820–7821/7824–7829)
+    - Förbättringsutgifter på annans fastighet (1120–1129, 7822–7823)
+    - Maskiner och andra tekniska anläggningar (1210–1219, 7830–7831)
+    - Inventarier, verktyg och installationer (1220–1269, 7832–7839)
+    - Övriga materiella anläggningstillgångar (1290–1299)
+  - Checkräkningskredit (om konto 2330 är använt)
+  - Långfristiga skulder – förfaller senare än 5 år (om konton 2300–2399 har saldo)
+  - Upplupna kostnader och förutbetalda intäkter (om konton 2900–2999 har saldo)
+  - Ställda säkerheter och ansvarsförbindelser (alltid)
+
+  Varje avskrivningstabell visar 7 rader: ingående/förändring/utgående anskaffningsvärde, ingående/årets/utgående ackumulerade avskrivningar och bokfört värde. Konton som slutar på 9 i anläggnings-intervallet identifieras som ackumulerade avskrivningar (BAS-konvention).
 - **Underskrifter** med valfritt antal styrelsepersoner
 - **Faststallelseintyg** på egen sida
 
@@ -105,7 +125,7 @@ frostTax/
 │   │   └── ink2s_calc.py           # INK2S skattemässiga justeringar (4.1–4.22)
 │   ├── templates/                  # Jinja2 HTML-mallar (workspace + print)
 │   └── static/                     # CSS (Gredor-inspirerad palett)
-├── tests/                          # pytest-tester (49 st)
+├── tests/                          # pytest-tester (60 st)
 └── requirements.txt
 ```
 
